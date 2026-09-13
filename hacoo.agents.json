@@ -1,0 +1,13 @@
+{
+  "enabled": [
+    "apr",
+    "dft",
+    "flow",
+    "irem",
+    "pv",
+    "sipi",
+    "sta",
+    "synthesis",
+    "thermal"
+  ]
+}

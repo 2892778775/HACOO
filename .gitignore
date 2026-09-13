@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Secrets & local env
+.env
+.env.*
+!.env.example
+*.key
+
+# HACOO runtime data (per-deployment, not source)
+logs/
+runs/
+knowledge/
+*.audit
+
+# Local binaries / tools
+opencode-cli.exe
+*.exe
+
+# OS / editor
+Thumbs.db
+.DS_Store
+.idea/
+.vscode/

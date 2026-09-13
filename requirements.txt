@@ -1,0 +1,8 @@
+# 核心五层: 仅 Python 标准库 (>= 3.8), 无第三方依赖
+# 以下为可选入口依赖:
+
+# LangChain agent runner (可选入口, 公司 Linux 已装 langchain/vLLM)
+langchain>=0.2
+langchain-openai>=0.1
+
+# OpenCode MCP 入口: 无需 pip 依赖 (hacoo.access.mcp_server 为零依赖实现)
