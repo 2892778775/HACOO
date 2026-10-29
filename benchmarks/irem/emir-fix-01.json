@@ -1,0 +1,41 @@
+{
+  "id": "emir-fix-01",
+  "agent": "irem",
+  "tool": "redhawk_sc",
+  "requires": ["redhawk_sc"],
+  "description": "SO-8: emir-fix-strategy skill 核心 — api_emir_report_hotspots 取 hotspot -> 归因(局部高翻转) -> 策略(decap+PG 加密) -> 移交 apr 决策(含交接理由); requires=redhawk_sc 由 HACOO_REDHAWK_SC_MOCK=1 或真实 binary 满足",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"},
+    "knowledge_seed": [
+      {"symptom": "IR hotspot 集中在 ALU 等高翻转逻辑区域",
+       "root_cause": "局部高翻转导致动态压降叠加静态压降",
+       "resolution": "decap 插入 + 局部 PG 加密, 移交 apr 执行, 修后复验 hotspot 报告",
+       "tags": ["irem", "hotspot"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "hotspot"}},
+    {"call": "api_load_design", "args": {"def_file": "chip.def", "top": "chip",
+                                         "lef": ["tech.lef"], "libs": ["ss.lib"]}},
+    {"call": "api_run_ir_analysis", "args": {"analysis_type": "static"}},
+    {"call": "api_emir_report_hotspots", "args": {"top_n": 4}},
+    {"call": "api_decision_record", "args": {"stage": "emir_fix", "action": "attribution",
+                                             "rationale": "top2 hotspot 均在 u_core/u_alu (M5, 98.5/87.2 mV) 高翻转逻辑区, KB 命中 -> 归因局部高翻转",
+                                             "params": {"cluster": "u_core/u_alu", "cause": "local_high_toggling", "worst_mv": 98.5}}},
+    {"call": "api_decision_record", "args": {"stage": "emir_fix", "action": "strategy",
+                                             "rationale": "局部高翻转归因 -> 策略 decap 插入 + 局部 PG 加密 (不动逻辑, 先做版图侧)",
+                                             "params": {"strategy": "decap_plus_pg_densify", "target_mv": 80.0}}},
+    {"call": "api_decision_record", "args": {"stage": "emir_fix", "action": "handoff",
+                                             "rationale": "版图改动移交 apr: 在 u_alu 簇 (x~120,y~340) 插 decap 并加密 M5 PG strap; 验收: 复验 worst_drop_mv <= 80mV; irem 保留复验责任",
+                                             "params": {"handoff_to": "apr", "strategy": "decap_plus_pg_densify", "target_mv": 80.0}}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"},
+    {"type": "output_contains", "step": 3, "text": "\"worst_drop_mv\": 98.5"},
+    {"type": "output_contains", "step": 6, "text": "\"handoff_to\": \"apr\""},
+    {"type": "metric_observed", "metric": "ir_drop_mv", "method": "api_emir_report_hotspots"}
+  ],
+  "tags": ["irem", "emir", "hotspot", "so-8", "golden"]
+}

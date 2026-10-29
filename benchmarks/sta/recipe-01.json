@@ -1,0 +1,31 @@
+{
+  "id": "recipe-01",
+  "agent": "sta",
+  "tool": "mock_eda",
+  "description": "X-2: recipe 学习 — 知识条目带 design 画像 (foundry/node/block_type) 沉淀, 查询带 profile 时同画像条目加权优先返回",
+  "setup": {
+    "knowledge_seed": [
+      {"symptom": "WNS 收敛慢", "root_cause": "通用经验",
+       "resolution": "通用: 提 effort", "tags": ["timing"]},
+      {"symptom": "WNS 收敛慢", "root_cause": "N3 CPU 设计 clock gating 比率过低",
+       "resolution": "N3 CPU: 先查 clock gating 比率再提 effort",
+       "tags": ["timing"],
+       "profile": {"foundry": "tsmc", "node": "n3", "block_type": "cpu"}}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "WNS",
+                                             "profile": {"foundry": "tsmc", "node": "n3", "block_type": "cpu"}}},
+    {"call": "api_decision_record", "args": {"stage": "sta", "action": "recipe_reuse",
+                                             "rationale": "按当前 design 画像 (tsmc/n3/cpu) 检索, 优先复用同画像经验",
+                                             "params": {"profile": "tsmc/n3/cpu"}}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 2},
+    {"type": "decision_recorded"},
+    {"type": "output_contains", "step": 0, "text": "clock gating"},
+    {"type": "output_contains", "step": 0, "text": "\"profile\""}
+  ],
+  "tags": ["sta", "knowledge", "recipe", "x-2", "golden"]
+}

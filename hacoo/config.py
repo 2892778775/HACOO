@@ -17,6 +17,15 @@
     HACOO_KNOWLEDGE_DIR                Agent 知识库目录 (默认 knowledge/)
     HACOO_DECISIONS_LOG                决策日志路径 (默认 logs/decisions.jsonl)
     HACOO_RUNS_DIR                     flow run manifest 目录 (默认 runs/)
+    HACOO_OBSERVATIONS_DIR             观测存储目录 (默认 observations/)
+    HACOO_INSIGHTS_LOG                 insight 存储路径 (默认 logs/insights.jsonl)
+    HACOO_KB_MISSES_LOG                知识库未命中日志 (默认 logs/kb-misses.jsonl)
+    HACOO_UPGRADES_LOG                 升级提案存储路径 (默认 logs/upgrade-proposals.jsonl)
+    HACOO_ISF_SHELL                    ISF 持久 shell 可执行文件 (默认 bash)
+    HACOO_ISF_MOCK                     "1" 强制 ISF mock 模式 (测试用)
+    HACOO_ISF_STATUS_CMD               ISF flow 状态查询命令模板
+    HACOO_DASH_PORT                    Dashboard 端口 (默认 8501; dashboard 为可选组件)
+    HACOO_DASH_OFFLINE                 "1" 强制 Dashboard 离线只读模式 (默认 0)
 """
 from __future__ import annotations
 
@@ -42,6 +51,10 @@ class Config:
     knowledge_dir: str = "knowledge"
     decisions_log: str = "logs/decisions.jsonl"
     runs_dir: str = "runs"
+    observations_dir: str = "observations"
+    insights_log: str = "logs/insights.jsonl"
+    kb_misses_log: str = "logs/kb-misses.jsonl"
+    upgrades_log: str = "logs/upgrade-proposals.jsonl"
 
     @classmethod
     def from_env(cls, config_file: Optional[str] = None) -> "Config":
@@ -77,4 +90,8 @@ class Config:
             knowledge_dir=env.get("HACOO_KNOWLEDGE_DIR") or cfg.get("knowledge_dir", "knowledge"),
             decisions_log=env.get("HACOO_DECISIONS_LOG") or cfg.get("decisions_log", "logs/decisions.jsonl"),
             runs_dir=env.get("HACOO_RUNS_DIR") or cfg.get("runs_dir", "runs"),
+            observations_dir=env.get("HACOO_OBSERVATIONS_DIR") or cfg.get("observations_dir", "observations"),
+            insights_log=env.get("HACOO_INSIGHTS_LOG") or cfg.get("insights_log", "logs/insights.jsonl"),
+            kb_misses_log=env.get("HACOO_KB_MISSES_LOG") or cfg.get("kb_misses_log", "logs/kb-misses.jsonl"),
+            upgrades_log=env.get("HACOO_UPGRADES_LOG") or cfg.get("upgrades_log", "logs/upgrade-proposals.jsonl"),
         )

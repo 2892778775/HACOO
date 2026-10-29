@@ -1,0 +1,13 @@
+****************************************
+Report : test coverage
+Design : chip
+Version: T-2022.03
+****************************************
+
+  Total faults:              52310
+  Detected faults:           49572
+  Untestable faults:           287
+  Pattern count:              1500
+
+  Test Coverage:   95.66%
+  Fault Coverage:  94.77%

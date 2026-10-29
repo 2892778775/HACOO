@@ -1,0 +1,38 @@
+{
+  "id": "dft-closure-01",
+  "agent": "dft",
+  "tool": "tessent",
+  "requires": ["tessent"],
+  "description": "FE-5: dft-coverage-closure — 覆盖率未达标场景 (target 99.0 高于 mock 读数): KB 查询 -> 归因分类 (dominant_class AU) + 策略建议 (test point) 记录决策 -> 复跑 ATPG -> 复测覆盖率, 全链路问责闭环",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"},
+    "knowledge_seed": [
+      {"symptom": "ATPG test coverage 卡在 95% 上不去",
+       "root_cause": "untestable 故障集中在不可控时钟门控与黑盒 macro 边界",
+       "resolution": "先分析 AU/ND 构成, 对 clock-gating 加 test point 或调整 scan chain 划分",
+       "tags": ["dft", "coverage"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "coverage"}},
+    {"call": "api_dft_insert_scan", "args": {"chains": 8}},
+    {"call": "api_dft_atpg", "args": {"patterns": 1000}},
+    {"call": "api_dft_report_coverage"},
+    {"call": "api_decision_record", "args": {"stage": "dft", "action": "coverage_fix_round1",
+                                             "rationale": "test_coverage 低于 target 99.0; 归因分类 dominant_class=AU (不可控时钟门控); 策略: 插 control test point 后重 insert_scan + 复跑 ATPG",
+                                             "params": {"target": 99.0, "dominant_class": "AU",
+                                                        "strategy": "test_point_insertion"}}},
+    {"call": "api_dft_atpg", "args": {"patterns": 2000}},
+    {"call": "api_dft_report_coverage"}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"},
+    {"type": "output_contains", "step": 4, "text": "dominant_class"},
+    {"type": "output_contains", "step": 4, "text": "AU"},
+    {"type": "output_contains", "step": 4, "text": "test_point_insertion"},
+    {"type": "metric_observed", "metric": "test_coverage", "method": "api_dft_report_coverage"}
+  ],
+  "tags": ["dft", "coverage", "fe-5", "golden"]
+}

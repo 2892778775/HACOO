@@ -1,0 +1,37 @@
+{
+  "id": "dft-cov-01",
+  "agent": "dft",
+  "tool": "tessent",
+  "requires": ["tessent"],
+  "description": "FE-4: 真实 DFT adapter (Tessent) — insert_scan -> atpg -> report_coverage 返回归一化三字段 {test_coverage, fault_coverage, untestable}; requires=tessent 由 HACOO_TESSENT_MOCK=1 或真实 binary 满足 (与 syn-qor-01 同口径)",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"},
+    "knowledge_seed": [
+      {"symptom": "ATPG test coverage 卡在 95% 上不去",
+       "root_cause": "untestable 故障集中在不可控时钟门控与黑盒 macro 边界",
+       "resolution": "先分析 AU/ND 构成, 对 clock-gating 加 test point 或调整 scan chain 划分",
+       "tags": ["dft", "coverage"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "coverage"}},
+    {"call": "api_dft_insert_scan", "args": {"chains": 8}},
+    {"call": "api_dft_atpg", "args": {"patterns": 1000}},
+    {"call": "api_dft_report_coverage"},
+    {"call": "api_decision_record", "args": {"stage": "dft", "action": "coverage_review",
+                                             "rationale": "test_coverage/fault_coverage 对目标, untestable 构成决定下一步策略",
+                                             "params": {"target_coverage": 98.0}}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "output_contains", "step": 3, "text": "\"test_coverage\""},
+    {"type": "output_contains", "step": 3, "text": "\"fault_coverage\""},
+    {"type": "output_contains", "step": 3, "text": "\"untestable\""},
+    {"type": "metric_observed", "metric": "test_coverage", "method": "api_dft_report_coverage"},
+    {"type": "metric_observed", "metric": "fault_coverage", "method": "api_dft_report_coverage"},
+    {"type": "metric_observed", "metric": "untestable", "method": "api_dft_report_coverage"},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["dft", "coverage", "fe-4", "golden"]
+}

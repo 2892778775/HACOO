@@ -14,9 +14,20 @@ description: Orchestrate a multi-agent design flow on HACOO — pick a template 
    常用: `block_signoff` (全流程) / `sta_only` (仅 STA)。
 3. **启动**: `hacoo_flow_start(template, params)` → 拿 `run_id`。
    长流程用 `hacoo_call api_flow_start` 加 `async_=true` 并轮询。
-4. **监视**: `hacoo_flow_status(run_id)`; ISF/Airflow 侧用
-   `api_isf_flow_status` / `api_isf_airflow_dags` (flow agent 域内)。
+4. **监视**: `hacoo_flow_status(run_id)`; ISF 侧 flow 由 flow agent 经
+   `api_isf_setup`(激活 TO 项目) → `api_isf_fw_start` 启动, 用
+   `api_isf_flow_status` / `api_isf_flows` 跟踪 (flow agent 域内)。
 5. **复盘**: 见 self-improvement skill — 每个失败 stage 都要沉淀知识库条目。
+
+## ISF 对接要点 (flow agent 必读)
+
+- `fw start` 是"阻塞式初始化": 启动阶段占用会话 (从 ISF central 拉取
+  flow 内容, 冷项目可能几分钟), Airflow 接管后终端释放 — 同步调用即可,
+  默认 timeout 1800s; 冷项目首次启动建议 `async_=true` 后台执行。
+- 启动 log 中的 Airflow GUI URL 会被解析到返回的 `airflow_urls`,
+  主动报告给设计人员 (人可在 GUI 上同步监视)。
+- Airflow 接管后用 `api_isf_flow_status(flow_id)` (底层 `fw jobs`) 跟踪;
+  其他 ISF 命令 (停止/版本查询等) 走 `api_isf_run` 泛命令通道。
 
 ## 约束
 

@@ -1,0 +1,30 @@
+{
+  "id": "sta-wns-analysis-01",
+  "agent": "sta",
+  "tool": "mock_eda",
+  "description": "给定带 setup violation 的 mock 设计, agent 应查询知识库并给出归因决策",
+  "setup": {
+    "knowledge_seed": [
+      {"symptom": "setup violation WNS 恶化 after high effort synthesis",
+       "root_cause": "hold 修复插入大量 buffer 导致 setup 路径恶化",
+       "resolution": "high effort 前先冻结 hold-critical 路径",
+       "tags": ["setup", "wns"]}
+    ],
+    "observations_seed": [],
+    "mock_tool_state": {}
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "setup violation"}},
+    {"call": "api_load_design", "args": {"path": "chip.v", "top": "chip"}},
+    {"call": "api_report_timing", "args": {"max_paths": 5}},
+    {"call": "api_decision_record", "args": {"stage": "sta_report", "action": "analyze_wns",
+                                             "rationale": "归因 WNS 并复用知识库经验"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"},
+    {"type": "output_contains", "text": "wns"}
+  ],
+  "tags": ["sta", "setup", "golden"]
+}

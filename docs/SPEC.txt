@@ -1,0 +1,19 @@
+在我们工作中，一个Tape-out项目的人员安排如下：
+(1) 1 project manager
+(2) 1 DFT engineer
+(3) 1 SYN engineer
+(4) 3~5 physical design engineer
+(5) 1 IREM signoff owner
+(6) 1 STA signoff owner
+(7) 1 PV signoff owner
+(8) others physics domain owners: SI, PI, thernmal, stress
+大家都工作在ISF平台上，借助ISF起flow，推送数据到ISF central。每个stage的flow也都由各自domain的人员负责维护。通常是一个ctshell入口，包含调用EDA工具（通常是 EDA_API -f user_script.tcl 定义客制化的flow），数据处理与报告生成（这其中会包含很多Python/perl/tcshell脚本的调用，也都是stage owner日常需要维护的，通常常用的脚本会合并的ISF trunk上，不同的Tapeout项目可以复用）, 以及一些solutions（root cause diagnosis, visualization, data analysis, fixing strategy etc.）。因为设计人员的变动，技能熟练程度的不同，每个stage的flow都累积了大量的代码，以及很少用到的solutions等，新人和老师傅在flow出现问题，需要去debug的时候都很困难。
+整个项目的运行一定离不开专业的工程师，但我希望HACOO这个平台，可以尽可能的释放工程师的潜力，能够处理大部分的问题，让工程师做选择题和优化问题。所以它一定需要一个方便工程师提供反馈纠正的入口，然后对应的Agent可以定期更新，也可以按照工程师的明确指令更新。
+当然工程师也会有知识盲点，不同领域的Agent也要能够及时地做总结和发现，提升工程师的能力边界。
+最终对这个平台的期待是：
+1. 一个工作8~10年的PM，可以带1个前端工程师和1个后端工程师，结合每个领域的Agents完成整个tapeout项目的80%工作 （进入到ECO阶段）
+2. 其他的工程师可以很方便地指正Agents的工作方式，知识库等。 也可从Agents工作流中学习之前没遇到的知识
+3. 每次tapeout项目结束后，各个stage的agents都要更新
+4. 工程师可以容易，方便的控制每个agents的能力边界。增加，禁用，删除，更新 agents/skills
+5. 工程师主要通过自然语言和可视化界面处理各个环节。
+6. 每个stage的工程师都能很方便的运维其创造的agents，让其能力边界不同扩大

@@ -1,0 +1,14 @@
+{
+  "agent": "synthesis",
+  "version": "1.2.0",
+  "ts": 1793194250.414,
+  "pass_rate": 1.0,
+  "cases": {
+    "syn-qor-01": {
+      "pass": true
+    },
+    "synth-conv-01": {
+      "pass": true
+    }
+  }
+}

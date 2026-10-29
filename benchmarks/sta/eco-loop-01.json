@@ -1,0 +1,29 @@
+{
+  "id": "eco-loop-01",
+  "agent": "sta",
+  "tool": "mock_eda",
+  "description": "EC-1: eco_loop flow 模板端到端 — sta 诊断 -> apr 执行 ECO -> sta 增量验证 的阶段内循环, wns >= target 收敛退出; mock_eda api_run_eco 每轮 +0.4ns 确定性改善, 最坏 3 轮收敛 (max_iter=5)",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"},
+    "knowledge_seed": [
+      {"symptom": "ECO 多轮后 WNS 仍不达标",
+       "root_cause": "修复策略与违例类型不匹配 (如 setup 用 size_up, hold 需 delay 插入)",
+       "resolution": "按 sta-eco-priority 排序选策略, 每轮验证后决策下一轮; 超 max_iter 升级人工",
+       "tags": ["eco", "convergence"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "ECO"}},
+    {"call": "api_flow_start", "args": {"template": "eco_loop",
+                                        "params": {"design_path": "chip.v", "top": "chip",
+                                                   "target_wns": 0.0, "max_iter": 5}}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "output_contains", "step": 1, "text": "\"status\": \"success\""},
+    {"type": "output_contains", "step": 1, "text": "\"eco_iterate\""},
+    {"type": "output_contains", "step": 1, "text": "\"apply_eco\""}
+  ],
+  "tags": ["sta", "apr", "eco", "convergence", "ec-1", "golden"]
+}

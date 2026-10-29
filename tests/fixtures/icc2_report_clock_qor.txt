@@ -1,0 +1,8 @@
+****************************************
+Report : clock_qor
+Design : soc_top
+Version: T-2022.03
+****************************************
+Clock Tree QoR Summary
+  clock 'core_clk': global skew = 0.055, max insertion delay (latency) = 0.410, min insertion delay = 0.132
+  clock tree power (core_clk): 9.870 mW

@@ -1,0 +1,5 @@
+*** Report: congestion ***
+Congestion Analysis after place_opt_design:
+  Total Overflow: 20 GRCs
+  Horizontal Overflow: 8, Vertical Overflow: 11
+  Congestion Hot Spots: 9

@@ -1,0 +1,23 @@
+{
+  "id": "pv-lvs-01",
+  "agent": "pv",
+  "tool": "calibre",
+  "description": "SO-4: nmLVS 运行与报告结构化解析, 断言 shorts/opens/net_mismatch 计数",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"}
+  },
+  "script": [
+    {"call": "api_run_lvs", "args": {"runset": "lvs.rules", "layout": "chip.gds",
+                                     "source": "chip.sp", "top": "chip"}},
+    {"call": "api_decision_record", "args": {"stage": "pv_lvs", "action": "lvs_debug",
+                                             "rationale": "SO-4 LVS 结果结构化: INCORRECT 需定位 short/open"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "output_contains", "step": 0, "text": "INCORRECT"},
+    {"type": "output_contains", "step": 0, "text": "shorts"},
+    {"type": "output_contains", "step": 0, "text": "net_mismatch"},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["pv", "lvs", "so-4", "golden"]
+}

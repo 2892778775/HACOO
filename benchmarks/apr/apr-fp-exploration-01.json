@@ -1,0 +1,48 @@
+{
+  "id": "apr-fp-exploration-01",
+  "agent": "apr",
+  "tool": "icc2",
+  "description": "BE-3: fp-exploration skill 核心循环 — 同一 block 以 3 组 utilization 方案依次试跑 (fp_create -> place_opt), 对比 utilization/hotspot_count 指标, 产出方案对比表并推荐最优 (ICC2 mock 序列应答: util 0.70/0.80/0.60 -> hotspots 3/6/1)",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"},
+    "knowledge_seed": [
+      {"symptom": "floorplan utilization 过高导致 place 后 congestion 失控",
+       "root_cause": "utilization > 0.75 时局部布线资源不足, hotspot 集中在 macro 间通道",
+       "resolution": "fp 探索期以 0.60/0.70/0.80 三档试跑, 以 congestion hotspot 数为主判据选型",
+       "tags": ["floorplan", "utilization", "congestion"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "utilization congestion"}},
+    {"call": "api_load_design", "args": {"netlist": "chip.v", "top": "chip",
+                                         "lib_name": "ndm_lib", "tech_tf": "tech.tf",
+                                         "ndm_libs": ["ref.ndm"]}},
+    {"call": "api_decision_record", "args": {"stage": "fp_exploration", "action": "plan_scenarios",
+                                             "rationale": "探索计划: util=0.70/0.80/0.60 三方案, 判据 hotspot_count (KB 命中: util>0.75 易失控)"}},
+    {"call": "api_fp_create", "args": {"utilization": 0.7, "aspect_ratio": 1.0, "core_margin": 2.0}},
+    {"call": "api_fp_place_macros"},
+    {"call": "api_place_opt"},
+    {"call": "api_fp_create", "args": {"utilization": 0.8, "aspect_ratio": 1.0, "core_margin": 2.0}},
+    {"call": "api_place_opt"},
+    {"call": "api_fp_create", "args": {"utilization": 0.6, "aspect_ratio": 1.0, "core_margin": 2.0}},
+    {"call": "api_place_opt"},
+    {"call": "api_decision_record", "args": {"stage": "fp_exploration", "action": "recommend",
+                                             "rationale": "方案对比表: util=0.70->hotspots=3; util=0.80->hotspots=6; util=0.60->hotspots=1。推荐 util=0.60 方案 (congestion 最低, 面积代价可接受)"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"},
+    {"type": "output_contains", "step": 3, "text": "\"utilization\": 0.7"},
+    {"type": "output_contains", "step": 5, "text": "\"hotspot_count\": 3"},
+    {"type": "output_contains", "step": 6, "text": "\"utilization\": 0.8"},
+    {"type": "output_contains", "step": 7, "text": "\"hotspot_count\": 6"},
+    {"type": "output_contains", "step": 8, "text": "\"utilization\": 0.6"},
+    {"type": "output_contains", "step": 9, "text": "\"hotspot_count\": 1"},
+    {"type": "output_contains", "step": 10, "text": "方案对比表"},
+    {"type": "output_contains", "step": 10, "text": "推荐"},
+    {"type": "metric_observed", "metric": "utilization", "method": "api_fp_create"},
+    {"type": "metric_observed", "metric": "hotspot_count", "method": "api_place_opt"}
+  ],
+  "tags": ["apr", "floorplan", "exploration", "be-3", "golden"]
+}

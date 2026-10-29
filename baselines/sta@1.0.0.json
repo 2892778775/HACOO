@@ -1,0 +1,14 @@
+{
+  "agent": "sta",
+  "version": "1.0.0",
+  "ts": 1793187738.804,
+  "pass_rate": 1.0,
+  "cases": {
+    "sta-mcmm-01": {
+      "pass": true
+    },
+    "sta-wns-analysis-01": {
+      "pass": true
+    }
+  }
+}

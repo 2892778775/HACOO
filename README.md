@@ -76,8 +76,34 @@ python -m hacoo call api_flow_trace --args '{"run_id": "run-xxx"}'
 `api_flow_start(template, params)` 按模板执行多 Agent 流程（内置
 `block_signoff` / `sta_only`)；所有 stage 共享后端实例（状态跨 stage 连续），
 每个 stage 自动记录决策并关联审计。ISF 能力通过 `isf` adapter 暴露
-（`api_isf_submit_flow / flow_status / db_save / db_query / cicd_trigger /
-airflow_dags`,mock 实现，替换为真实 ISF REST 调用即可上线）。
+（`api_isf_setup` 激活 TO 项目环境 → `api_isf_fw_start` 启动
+`fw start -flow APR+TC+PV -block ... ` 流程 → `api_isf_flow_status` 查询；
+`api_isf_run` 为任意 ISF 命令的泛用通道；无 ISF 环境时自动回退 mock）。
+
+### 成长闭环（反馈 / 复核 / 巡检三件套）
+
+观测（每次带 `agent` 的工具调用自动落盘一条观测，含指标与错误签名）→
+检测（规则化检测器发现趋势异常/失败聚类/知识盲区/自我问题）→ 工程师确认或纠正
+→ 回流知识库 → 后续决策优先复用。三件套用法：
+
+```bash
+# 1) 反馈（人的嘴）: 纠正或确认 Agent 的做法, 直接进入知识库 (weight=5, 优先被复用)
+python -m hacoo feedback --agent sta --content "这种情况应先查 clock skew" --decision-id dec-xxx
+
+# 2) 复核: 看待审队列 (pending 决策 + Agent 自我沉淀), approve/reject 单条经验
+python -m hacoo review --agent sta
+python -m hacoo review-mark --entry kb-xxx --action approve --note "已验证"
+
+# 3) 巡检（Agent 的眼）: 跑检测器生成带证据的 insight; confirm 自动沉淀为知识条目
+python -m hacoo insights --scan --agent sta
+python -m hacoo insights --agent sta --status new
+python -m hacoo insight-mark --id ins-xxx --action confirm
+```
+
+反馈/复核/巡检均为**人类面向**接口，不受 Agent 启停限制；dismiss 的 insight
+按签名去重，同类问题不再重复报警。Agent prompt 已内置两条纪律：被人类纠正后
+必须调用 `hacoo_feedback` 沉淀；每次 flow 结束后调用 `hacoo_insights_scan` 并向
+人类汇报 `new` 状态的 insight。
 
 ## 5 分钟上手
 
@@ -91,10 +117,27 @@ python -m hacoo doctor
 # 3) 跑一遍演示流程 (mock 时序签核)
 python -m hacoo demo
 
-# 4) OpenCode 入口 (Agent 形式)
+# 4) 可视化操作平台 (可选组件, 需要 streamlit, 且 streamlit 要求 Python >= 3.9)
+python -m hacoo dashboard          # http://127.0.0.1:8501
+
+# 5) OpenCode 入口 (Agent 形式)
 set VLLM_BASE_URL=http://<vllm-host>:8000/v1   # Windows; Linux 用 export
 opencode            # hacoo 为主 orchestrator, hacoo-sta 等为 subagent
 ```
+
+## 可视化操作平台（Dashboard）
+
+工程师的日常交互入口（对话入口仍是 OpenCode）：总览 / Run 中心 / Flow 启动台 /
+决策复核 / 知识库 / Insight 中心 / 升级管理 / Agent 管理 / 基准与兼容性 /
+观测与日志 共 10 个页面（`docs/SPEC-dashboard.md`）。
+
+- **SDK 优先**：一切写操作经 `HacooClient` 走网关（保留多用户隔离/配额/审计），
+  绝不直接改写 `logs/`、`knowledge/` 文件。
+- **离线只读模式**：server 未启动时自动降级（或 `HACOO_DASH_OFFLINE=1` 强制），
+  黄色横幅提示，写按钮全部隐藏，仅 总览 / Run 中心 / 知识库 / 基准 / 观测日志
+  五个页面可用，数据直接读 JSONL/manifest 文件（只读）。
+- 数据层 `hacoo/dashboard_data.py` 为纯函数（不含 streamlit import），可独立单测；
+  UI 层在 `dashboard/`（Streamlit, `st.navigation` + `st.Page`）。
 
 ## 架构映射（SPEC 五层 + Skills 层）
 
@@ -133,12 +176,26 @@ opencode            # hacoo 为主 orchestrator, hacoo-sta 等为 subagent
 
 ```
 python -m hacoo serve [--host H] [--port P]   启动平台服务
+python -m hacoo dashboard [--port 8501]       可视化操作平台 (可选依赖 streamlit)
 python -m hacoo doctor                        环境自检 (Python/服务/授权/工具/vLLM)
 python -m hacoo demo                          演示流程 (mock 时序签核)
 python -m hacoo whoami                        当前身份 / 角色 / 配额
 python -m hacoo methods [-v] [--tool T]       列出可用 api_* 方法
 python -m hacoo instances                     我的活实例
+python -m hacoo runs [--status success]       flow run 摘要列表
 python -m hacoo call api_report_timing --instance inst-xxx --args '{"max_paths":5}'
+python -m hacoo feedback --agent sta --content "..."   人类反馈纠正 (成长闭环)
+python -m hacoo review [--agent sta]                    待复核队列
+python -m hacoo insights --scan [--agent sta]           巡检: 检测器扫描新问题
+python -m hacoo upgrade propose --kind agent_capability --target sta --title "..." \
+    --motivation "..." --acceptance "..."               升级提案 (Part A)
+python -m hacoo upgrade list [--status proposed]        查询提案
+python -m hacoo upgrade update --id up-xxx --to accepted   提案状态流转
+python -m hacoo agents version sta 1.3.0                Agent 版本 bump
+python -m hacoo compat snapshot|check                   契约快照: 重建 / 校验
+python -m hacoo bench run [--agent sta] [--tag T]       能力基准 (golden cases)
+python -m hacoo bench save-baseline --agent sta         存 baselines/<agent>@<ver>.json
+python -m hacoo bench compare --baseline <path>         与基准对比 (fail->pass / pass->fail)
 ```
 
 ## 配置（hacoo/config.py，全部可用环境变量覆盖）
@@ -157,6 +214,12 @@ python -m hacoo call api_report_timing --instance inst-xxx --args '{"max_paths":
 | `HACOO_KNOWLEDGE_DIR` | knowledge/ | Agent 知识库目录 |
 | `HACOO_DECISIONS_LOG` | logs/decisions.jsonl | 决策日志 |
 | `HACOO_RUNS_DIR` | runs/ | flow run manifest 目录 |
+| `HACOO_OBSERVATIONS_DIR` | observations/ | 观测沉淀目录（成长闭环 §1） |
+| `HACOO_INSIGHTS_LOG` | logs/insights.jsonl | insight 存储路径（成长闭环 §3） |
+| `HACOO_KB_MISSES_LOG` | logs/kb-misses.jsonl | 知识库未命中日志（知识盲区检测器数据源） |
+| `HACOO_UPGRADES_LOG` | logs/upgrade-proposals.jsonl | 升级提案存储（Part A） |
+| `HACOO_DASH_PORT` | 8501 | Dashboard 端口（可选组件） |
+| `HACOO_DASH_OFFLINE` | 0 | `1` 强制 Dashboard 离线只读模式 |
 | `HACOO_CONFIG` | — | JSON 配置文件（低于环境变量优先级） |
 
 客户端侧：`HACOO_SERVER`（平台地址）、`HACOO_TOKEN`（访问令牌）。

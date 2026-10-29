@@ -1,0 +1,24 @@
+****************************************
+Report : timing -max_paths 5 -delay_type max (SI-aware)
+Design : chip
+Version: T-2022.03
+****************************************
+
+  Startpoint: u_core/u_reg_a (rising edge-triggered)
+  Endpoint:   u_core/u_reg_b
+  Path Group: clk
+
+    Point                                   Incr       Path
+    ---------------------------------------------------------
+    clock network delta delay (SI)          0.021      0.021
+    u_core/u_and_01/Y (SI delta)            0.034      0.055
+    data arrival delta delay (SI)           0.017      0.188
+    crosstalk noise bump at u_net_7 (V)     0.038
+  slack (VIOLATED)  -0.188
+
+  Startpoint: u_core/u_reg_c (rising edge-triggered)
+    data arrival delta delay (SI)           0.009
+  slack (VIOLATED)  -0.045
+
+  Startpoint: u_core/u_reg_d (rising edge-triggered)
+  slack (MET)        0.033

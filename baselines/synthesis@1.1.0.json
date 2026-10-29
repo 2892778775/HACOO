@@ -1,0 +1,11 @@
+{
+  "agent": "synthesis",
+  "version": "1.1.0",
+  "ts": 1793145024.153,
+  "pass_rate": 1.0,
+  "cases": {
+    "syn-qor-01": {
+      "pass": true
+    }
+  }
+}

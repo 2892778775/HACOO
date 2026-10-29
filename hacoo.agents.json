@@ -9,5 +9,13 @@
     "sta",
     "synthesis",
     "thermal"
-  ]
+  ],
+  "versions": {
+    "apr": "1.3.0",
+    "dft": "1.2.0",
+    "irem": "1.2.0",
+    "pv": "1.3.0",
+    "sta": "1.3.0",
+    "synthesis": "1.2.0"
+  }
 }

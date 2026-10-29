@@ -20,6 +20,16 @@ OpenCode 配置见项目根目录 opencode.json:
     hacoo_task_status       轮询异步任务 (R8)
     hacoo_list_instances    查看活实例
     hacoo_release_instance  显式释放实例
+    hacoo_runs_list         列出 flow run 摘要 (可按 status 过滤)
+    hacoo_feedback          人类反馈纠正 (成长闭环 §2)
+    hacoo_review_queue      待复核队列 (pending 决策 + unreviewed 条目)
+    hacoo_knowledge_review  复核知识条目 (approve/reject)
+    hacoo_insights_scan     运行检测器扫描新问题 (成长闭环 §3)
+    hacoo_insights_list     查询 insight
+    hacoo_insight_review    复核 insight (confirm/dismiss, confirm 可联动升级提案)
+    hacoo_upgrade_propose   创建升级提案 (SPEC-evolution Part A)
+    hacoo_upgrade_list      查询升级提案
+    hacoo_upgrade_update    升级提案状态流转
 """
 from __future__ import annotations
 
@@ -151,6 +161,15 @@ TOOLS = [
             "run_id": {"type": "string"}}, "required": ["run_id"]},
     },
     {
+        "name": "hacoo_runs_list",
+        "description": "List flow run manifest summaries (latest first), optionally filtered "
+                       "by status (running|success|failed).",
+        "inputSchema": {"type": "object", "properties": {
+            "limit": {"type": "integer"},
+            "status": {"type": "string", "enum": ["running", "success", "failed"]},
+        }},
+    },
+    {
         "name": "hacoo_task_status",
         "description": "Poll status/result of an async task submitted via hacoo_call(async_=true).",
         "inputSchema": {"type": "object", "properties": {
@@ -172,6 +191,115 @@ TOOLS = [
         "description": "Explicitly release a backend instance and reclaim its resources.",
         "inputSchema": {"type": "object", "properties": {
             "instance_id": {"type": "string"}}, "required": ["instance_id"]},
+    },
+    {
+        "name": "hacoo_feedback",
+        "description": "Submit human feedback about an agent's decision or behavior. "
+                       "当人类指出 Agent 的决策/做法有误，或明确确认某个做法正确时调用 "
+                       "(feedback_type=correction|confirmation); corrections are persisted "
+                       "into the agent's knowledge base with high weight (weight=5).",
+        "inputSchema": {"type": "object", "properties": {
+            "agent": {"type": "string"},
+            "content": {"type": "string", "description": "feedback content in natural language"},
+            "decision_id": {"type": "string", "description": "optional decision to bind to"},
+            "feedback_type": {"type": "string", "enum": ["correction", "confirmation", "note"]},
+            "tags": {"type": "array", "items": {"type": "string"}},
+            "run_id": {"type": "string"},
+        }, "required": ["agent", "content"]},
+    },
+    {
+        "name": "hacoo_review_queue",
+        "description": "List items pending human review: pending decisions + unreviewed "
+                       "agent-sourced knowledge entries.",
+        "inputSchema": {"type": "object", "properties": {
+            "agent": {"type": "string"},
+            "limit": {"type": "integer"},
+        }},
+    },
+    {
+        "name": "hacoo_knowledge_review",
+        "description": "Approve or reject a knowledge entry. Rejected entries get weight=0 "
+                       "and are no longer promoted by knowledge queries.",
+        "inputSchema": {"type": "object", "properties": {
+            "entry_id": {"type": "string"},
+            "action": {"type": "string", "enum": ["approve", "reject"]},
+            "note": {"type": "string"},
+        }, "required": ["entry_id", "action"]},
+    },
+    {
+        "name": "hacoo_insights_scan",
+        "description": "Run rule-based detectors (trend/anomaly/blind_spot/self_issue) over an "
+                       "agent's observations, decisions and kb-miss log; persists new insights "
+                       "with evidence (deduplicated by signature). Defaults to all enabled agents.",
+        "inputSchema": {"type": "object", "properties": {
+            "agent": {"type": "string"},
+            "window_days": {"type": "integer"},
+        }},
+    },
+    {
+        "name": "hacoo_insights_list",
+        "description": "Query insights by agent/kind/status (new|confirmed|dismissed).",
+        "inputSchema": {"type": "object", "properties": {
+            "agent": {"type": "string"},
+            "kind": {"type": "string", "enum": ["anomaly", "trend", "blind_spot", "self_issue"]},
+            "status": {"type": "string", "enum": ["new", "confirmed", "dismissed"]},
+            "limit": {"type": "integer"},
+        }},
+    },
+    {
+        "name": "hacoo_insight_review",
+        "description": "Confirm or dismiss an insight. confirm with auto_kb=true automatically "
+                       "persists a knowledge entry (source=insight) linked to the insight; "
+                       "create_upgrade=true additionally opens an upgrade proposal "
+                       "(source=insight) so the finding becomes a trackable change.",
+        "inputSchema": {"type": "object", "properties": {
+            "insight_id": {"type": "string"},
+            "action": {"type": "string", "enum": ["confirm", "dismiss"]},
+            "note": {"type": "string"},
+            "auto_kb": {"type": "boolean"},
+            "create_upgrade": {"type": "boolean"},
+        }, "required": ["insight_id", "action"]},
+    },
+    {
+        "name": "hacoo_upgrade_propose",
+        "description": "Create an upgrade proposal for an agent/skill/adapter/platform change. "
+                       "acceptance (verifiable criteria, e.g. a bench case that must pass) is "
+                       "mandatory before the proposal can be accepted.",
+        "inputSchema": {"type": "object", "properties": {
+            "title": {"type": "string"},
+            "kind": {"type": "string", "enum": ["agent_capability", "skill_new", "skill_update",
+                                                "knowledge_bulk", "adapter_method",
+                                                "platform_feature"]},
+            "target": {"type": "string", "description": "agent/skill/tool name or 'platform'"},
+            "motivation": {"type": "string"},
+            "acceptance": {"type": "string", "description": "verifiable acceptance criteria"},
+            "proposed_change": {"type": "string"},
+            "source": {"type": "string", "enum": ["human", "insight", "review"]},
+            "source_ref": {"type": "string", "description": "ins-xxx / kb-xxx or null"},
+        }, "required": ["title", "kind", "target", "motivation"]},
+    },
+    {
+        "name": "hacoo_upgrade_list",
+        "description": "Query upgrade proposals (latest first), filterable by status/target.",
+        "inputSchema": {"type": "object", "properties": {
+            "status": {"type": "string", "enum": ["proposed", "accepted", "in_progress",
+                                                  "done", "rejected"]},
+            "target": {"type": "string"},
+            "limit": {"type": "integer"},
+        }},
+    },
+    {
+        "name": "hacoo_upgrade_update",
+        "description": "Transition an upgrade proposal: proposed->accepted|rejected; "
+                       "accepted->in_progress|rejected; in_progress->done|accepted. "
+                       "done should record version_after (e.g. 'sta@1.3.0').",
+        "inputSchema": {"type": "object", "properties": {
+            "proposal_id": {"type": "string"},
+            "to_status": {"type": "string", "enum": ["accepted", "in_progress", "done",
+                                                     "rejected"]},
+            "note": {"type": "string"},
+            "version_after": {"type": "string"},
+        }, "required": ["proposal_id", "to_status"]},
     },
 ]
 
@@ -235,6 +363,9 @@ def _call_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         return _text(client.flow_status(args["run_id"]))
     if name == "hacoo_flow_trace":
         return _text(client.flow_trace(args["run_id"]))
+    if name == "hacoo_runs_list":
+        return _text(client.runs_list(limit=args.get("limit", 100),
+                                      status=args.get("status")))
     if name == "hacoo_task_status":
         return _text(client.task_status(args["task_id"]))
     if name == "hacoo_task_cancel":
@@ -244,6 +375,45 @@ def _call_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
     if name == "hacoo_release_instance":
         client.release(args["instance_id"])
         return _text({"released": args["instance_id"]})
+    if name == "hacoo_feedback":
+        return _text(client.feedback(
+            agent=args["agent"], content=args["content"],
+            decision_id=args.get("decision_id"),
+            feedback_type=args.get("feedback_type", "correction"),
+            tags=args.get("tags"), run_id=args.get("run_id")))
+    if name == "hacoo_review_queue":
+        return _text(client.review_queue(agent=args.get("agent"),
+                                         limit=args.get("limit", 50)))
+    if name == "hacoo_knowledge_review":
+        return _text(client.knowledge_review(
+            entry_id=args["entry_id"], action=args["action"],
+            note=args.get("note", "")))
+    if name == "hacoo_insights_scan":
+        return _text(client.insights_scan(agent=args.get("agent"),
+                                          window_days=args.get("window_days", 7)))
+    if name == "hacoo_insights_list":
+        return _text(client.insights_list(
+            agent=args.get("agent"), kind=args.get("kind"),
+            status=args.get("status"), limit=args.get("limit", 100)))
+    if name == "hacoo_insight_review":
+        return _text(client.insight_review(
+            insight_id=args["insight_id"], action=args["action"],
+            note=args.get("note", ""), auto_kb=bool(args.get("auto_kb", True)),
+            create_upgrade=bool(args.get("create_upgrade", False))))
+    if name == "hacoo_upgrade_propose":
+        return _text(client.upgrade_propose(
+            title=args["title"], kind=args["kind"], target=args["target"],
+            motivation=args["motivation"], acceptance=args.get("acceptance", ""),
+            proposed_change=args.get("proposed_change", ""),
+            source=args.get("source", "human"), source_ref=args.get("source_ref")))
+    if name == "hacoo_upgrade_list":
+        return _text(client.upgrade_list(
+            status=args.get("status"), target=args.get("target"),
+            limit=args.get("limit", 100)))
+    if name == "hacoo_upgrade_update":
+        return _text(client.upgrade_update(
+            proposal_id=args["proposal_id"], to_status=args["to_status"],
+            note=args.get("note", ""), version_after=args.get("version_after")))
     raise HacooClientError("UNKNOWN_TOOL", "no such tool: %s" % name)
 
 

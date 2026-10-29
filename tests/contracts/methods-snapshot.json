@@ -1,0 +1,1519 @@
+{
+  "api_decision_outcome": {
+    "capability": "write",
+    "kind": "generic",
+    "params": {
+      "decision_id": {
+        "required": true,
+        "type": "str"
+      },
+      "metrics": {
+        "required": false,
+        "type": "dict"
+      },
+      "note": {
+        "required": false,
+        "type": "str"
+      },
+      "status": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_decision_query": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {
+      "agent": {
+        "required": false,
+        "type": "str"
+      },
+      "limit": {
+        "required": false,
+        "type": "int"
+      },
+      "run_id": {
+        "required": false,
+        "type": "str"
+      },
+      "status": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_decision_record": {
+    "capability": "write",
+    "kind": "generic",
+    "params": {
+      "action": {
+        "required": true,
+        "type": "str"
+      },
+      "agent": {
+        "required": true,
+        "type": "str"
+      },
+      "params": {
+        "required": false,
+        "type": "dict"
+      },
+      "rationale": {
+        "required": true,
+        "type": "str"
+      },
+      "run_id": {
+        "required": false,
+        "type": "str"
+      },
+      "stage": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_feedback_submit": {
+    "capability": "write",
+    "kind": "generic",
+    "params": {
+      "agent": {
+        "required": true,
+        "type": "str"
+      },
+      "content": {
+        "required": true,
+        "type": "str"
+      },
+      "decision_id": {
+        "required": false,
+        "type": "str"
+      },
+      "feedback_type": {
+        "required": false,
+        "type": "str"
+      },
+      "run_id": {
+        "required": false,
+        "type": "str"
+      },
+      "tags": {
+        "required": false,
+        "type": "list"
+      }
+    },
+    "tool": null
+  },
+  "api_flow_start": {
+    "capability": "write",
+    "kind": "generic",
+    "params": {
+      "params": {
+        "required": false,
+        "type": "dict"
+      },
+      "template": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_flow_status": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {
+      "run_id": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_flow_trace": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {
+      "run_id": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_insight_review": {
+    "capability": "write",
+    "kind": "generic",
+    "params": {
+      "action": {
+        "required": true,
+        "type": "str"
+      },
+      "auto_kb": {
+        "required": false,
+        "type": "bool"
+      },
+      "create_upgrade": {
+        "required": false,
+        "type": "bool"
+      },
+      "insight_id": {
+        "required": true,
+        "type": "str"
+      },
+      "note": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_insights_list": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {
+      "agent": {
+        "required": false,
+        "type": "str"
+      },
+      "kind": {
+        "required": false,
+        "type": "str"
+      },
+      "limit": {
+        "required": false,
+        "type": "int"
+      },
+      "status": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_insights_scan": {
+    "capability": "write",
+    "kind": "generic",
+    "params": {
+      "agent": {
+        "required": false,
+        "type": "str"
+      },
+      "window_days": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": null
+  },
+  "api_knowledge_add": {
+    "capability": "write",
+    "kind": "generic",
+    "params": {
+      "agent": {
+        "required": true,
+        "type": "str"
+      },
+      "profile": {
+        "required": false,
+        "type": "dict"
+      },
+      "resolution": {
+        "required": true,
+        "type": "str"
+      },
+      "root_cause": {
+        "required": false,
+        "type": "str"
+      },
+      "run_id": {
+        "required": false,
+        "type": "str"
+      },
+      "symptom": {
+        "required": true,
+        "type": "str"
+      },
+      "tags": {
+        "required": false,
+        "type": "list"
+      }
+    },
+    "tool": null
+  },
+  "api_knowledge_list": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {
+      "agent": {
+        "required": true,
+        "type": "str"
+      },
+      "limit": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": null
+  },
+  "api_knowledge_query": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {
+      "agent": {
+        "required": true,
+        "type": "str"
+      },
+      "keyword": {
+        "required": false,
+        "type": "str"
+      },
+      "limit": {
+        "required": false,
+        "type": "int"
+      },
+      "profile": {
+        "required": false,
+        "type": "dict"
+      },
+      "tags": {
+        "required": false,
+        "type": "list"
+      }
+    },
+    "tool": null
+  },
+  "api_knowledge_review": {
+    "capability": "write",
+    "kind": "generic",
+    "params": {
+      "action": {
+        "required": true,
+        "type": "str"
+      },
+      "entry_id": {
+        "required": true,
+        "type": "str"
+      },
+      "note": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_list_agents": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {},
+    "tool": null
+  },
+  "api_list_flow_templates": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {},
+    "tool": null
+  },
+  "api_list_instances": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {},
+    "tool": null
+  },
+  "api_list_method": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {
+      "tool": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_list_tools": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {},
+    "tool": null
+  },
+  "api_method_detail": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {
+      "method": {
+        "required": true,
+        "type": "str"
+      },
+      "tool": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_observations_query": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {
+      "agent": {
+        "required": false,
+        "type": "str"
+      },
+      "limit": {
+        "required": false,
+        "type": "int"
+      },
+      "run_id": {
+        "required": false,
+        "type": "str"
+      },
+      "tool": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_ping": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {},
+    "tool": null
+  },
+  "api_release_instance": {
+    "capability": "write",
+    "kind": "generic",
+    "params": {
+      "instance_id": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_review_queue": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {
+      "agent": {
+        "required": false,
+        "type": "str"
+      },
+      "limit": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": null
+  },
+  "api_runs_list": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {
+      "limit": {
+        "required": false,
+        "type": "int"
+      },
+      "status": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_spawn_instance": {
+    "capability": "write",
+    "kind": "generic",
+    "params": {
+      "tool": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_task_cancel": {
+    "capability": "write",
+    "kind": "generic",
+    "params": {
+      "task_id": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_task_status": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {
+      "task_id": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_upgrade_list": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {
+      "limit": {
+        "required": false,
+        "type": "int"
+      },
+      "status": {
+        "required": false,
+        "type": "str"
+      },
+      "target": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_upgrade_propose": {
+    "capability": "write",
+    "kind": "generic",
+    "params": {
+      "acceptance": {
+        "required": false,
+        "type": "str"
+      },
+      "kind": {
+        "required": true,
+        "type": "str"
+      },
+      "motivation": {
+        "required": true,
+        "type": "str"
+      },
+      "proposed_change": {
+        "required": false,
+        "type": "str"
+      },
+      "source": {
+        "required": false,
+        "type": "str"
+      },
+      "source_ref": {
+        "required": false,
+        "type": "str"
+      },
+      "target": {
+        "required": true,
+        "type": "str"
+      },
+      "title": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_upgrade_update": {
+    "capability": "write",
+    "kind": "generic",
+    "params": {
+      "note": {
+        "required": false,
+        "type": "str"
+      },
+      "proposal_id": {
+        "required": true,
+        "type": "str"
+      },
+      "to_status": {
+        "required": true,
+        "type": "str"
+      },
+      "version_after": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": null
+  },
+  "api_whoami": {
+    "capability": "read",
+    "kind": "generic",
+    "params": {},
+    "tool": null
+  },
+  "calibre:api_calibre_waive": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "bbox": {
+        "required": true,
+        "type": "str"
+      },
+      "justification": {
+        "required": true,
+        "type": "str"
+      },
+      "rule": {
+        "required": true,
+        "type": "str"
+      },
+      "work_dir": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "calibre"
+  },
+  "calibre:api_get_run_history": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "calibre"
+  },
+  "calibre:api_run_drc": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "layout": {
+        "required": true,
+        "type": "str"
+      },
+      "runset": {
+        "required": true,
+        "type": "str"
+      },
+      "top": {
+        "required": true,
+        "type": "str"
+      },
+      "work_dir": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "calibre"
+  },
+  "calibre:api_run_lvs": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "layout": {
+        "required": true,
+        "type": "str"
+      },
+      "runset": {
+        "required": true,
+        "type": "str"
+      },
+      "source": {
+        "required": true,
+        "type": "str"
+      },
+      "top": {
+        "required": true,
+        "type": "str"
+      },
+      "work_dir": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "calibre"
+  },
+  "calibre:api_run_perc": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "perc_type": {
+        "required": false,
+        "type": "str"
+      },
+      "runset": {
+        "required": true,
+        "type": "str"
+      },
+      "top": {
+        "required": true,
+        "type": "str"
+      },
+      "work_dir": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "calibre"
+  },
+  "dc_shell:api_get_design_state": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "dc_shell"
+  },
+  "dc_shell:api_report_qor": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "dc_shell"
+  },
+  "dc_shell:api_synth_compile": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "effort": {
+        "required": false,
+        "type": "str"
+      },
+      "extra_tcl": {
+        "required": false,
+        "type": "Optional[str]"
+      }
+    },
+    "tool": "dc_shell"
+  },
+  "dc_shell:api_synth_elaborate": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "files": {
+        "required": true,
+        "type": "list"
+      },
+      "top": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "dc_shell"
+  },
+  "dftmax:api_dft_atpg": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "patterns": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": "dftmax"
+  },
+  "dftmax:api_dft_insert_scan": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "chains": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": "dftmax"
+  },
+  "dftmax:api_dft_report_coverage": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "dftmax"
+  },
+  "dftmax:api_get_design_state": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "dftmax"
+  },
+  "genus:api_get_design_state": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "genus"
+  },
+  "genus:api_report_qor": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "genus"
+  },
+  "genus:api_synth_compile": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "effort": {
+        "required": false,
+        "type": "str"
+      },
+      "extra_tcl": {
+        "required": false,
+        "type": "Optional[str]"
+      }
+    },
+    "tool": "genus"
+  },
+  "genus:api_synth_elaborate": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "files": {
+        "required": true,
+        "type": "list"
+      },
+      "top": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "genus"
+  },
+  "icc2:api_cts_build": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "extra_tcl": {
+        "required": false,
+        "type": "str"
+      },
+      "target_skew_ps": {
+        "required": false,
+        "type": "float"
+      }
+    },
+    "tool": "icc2"
+  },
+  "icc2:api_cts_report": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "icc2"
+  },
+  "icc2:api_fp_create": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "aspect_ratio": {
+        "required": false,
+        "type": "float"
+      },
+      "core_margin": {
+        "required": false,
+        "type": "float"
+      },
+      "extra_tcl": {
+        "required": false,
+        "type": "str"
+      },
+      "utilization": {
+        "required": false,
+        "type": "float"
+      }
+    },
+    "tool": "icc2"
+  },
+  "icc2:api_fp_place_macros": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "extra_tcl": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "icc2"
+  },
+  "icc2:api_get_design_state": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "icc2"
+  },
+  "icc2:api_load_design": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "lib_name": {
+        "required": true,
+        "type": "str"
+      },
+      "ndm_libs": {
+        "required": true,
+        "type": "list"
+      },
+      "netlist": {
+        "required": true,
+        "type": "str"
+      },
+      "tech_tf": {
+        "required": true,
+        "type": "str"
+      },
+      "top": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "icc2"
+  },
+  "icc2:api_place_opt": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "extra_tcl": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "icc2"
+  },
+  "icc2:api_report_congestion": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "icc2"
+  },
+  "icc2:api_report_qor": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "icc2"
+  },
+  "icc2:api_route_drc_report": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "icc2"
+  },
+  "icc2:api_route_opt": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "extra_tcl": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "icc2"
+  },
+  "icc2:api_run_apr": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "extra_tcl": {
+        "required": false,
+        "type": "str"
+      },
+      "stage": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "icc2"
+  },
+  "icc2:api_save_db": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "label": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "icc2"
+  },
+  "innovus:api_cts_build": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "extra_tcl": {
+        "required": false,
+        "type": "str"
+      },
+      "target_skew_ps": {
+        "required": false,
+        "type": "float"
+      }
+    },
+    "tool": "innovus"
+  },
+  "innovus:api_cts_report": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "innovus"
+  },
+  "innovus:api_fp_create": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "aspect_ratio": {
+        "required": false,
+        "type": "float"
+      },
+      "core_margin": {
+        "required": false,
+        "type": "float"
+      },
+      "extra_tcl": {
+        "required": false,
+        "type": "str"
+      },
+      "utilization": {
+        "required": false,
+        "type": "float"
+      }
+    },
+    "tool": "innovus"
+  },
+  "innovus:api_fp_place_macros": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "extra_tcl": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "innovus"
+  },
+  "innovus:api_get_design_state": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "innovus"
+  },
+  "innovus:api_load_design": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "lef": {
+        "required": true,
+        "type": "list"
+      },
+      "libs": {
+        "required": true,
+        "type": "list"
+      },
+      "netlist": {
+        "required": true,
+        "type": "str"
+      },
+      "top": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "innovus"
+  },
+  "innovus:api_place_opt": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "extra_tcl": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "innovus"
+  },
+  "innovus:api_report_congestion": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "innovus"
+  },
+  "innovus:api_report_qor": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "innovus"
+  },
+  "innovus:api_route_drc_report": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "innovus"
+  },
+  "innovus:api_route_opt": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "extra_tcl": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "innovus"
+  },
+  "innovus:api_run_apr": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "extra_tcl": {
+        "required": false,
+        "type": "str"
+      },
+      "stage": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "innovus"
+  },
+  "innovus:api_save_db": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "path": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "innovus"
+  },
+  "isf:api_isf_flow_status": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {
+      "flow_id": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "isf"
+  },
+  "isf:api_isf_flows": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "isf"
+  },
+  "isf:api_isf_fw_start": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "block": {
+        "required": true,
+        "type": "str"
+      },
+      "data_version": {
+        "required": false,
+        "type": "str"
+      },
+      "design_version": {
+        "required": false,
+        "type": "str"
+      },
+      "flow": {
+        "required": true,
+        "type": "str"
+      },
+      "flow_path": {
+        "required": true,
+        "type": "str"
+      },
+      "run_id": {
+        "required": false,
+        "type": "str"
+      },
+      "timeout": {
+        "required": false,
+        "type": "int"
+      },
+      "usertcl": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "isf"
+  },
+  "isf:api_isf_run": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "command": {
+        "required": true,
+        "type": "str"
+      },
+      "timeout": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": "isf"
+  },
+  "isf:api_isf_setup": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "project": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "isf"
+  },
+  "mock_eda:api_get_design_state": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "mock_eda"
+  },
+  "mock_eda:api_load_design": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "path": {
+        "required": true,
+        "type": "str"
+      },
+      "top": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "mock_eda"
+  },
+  "mock_eda:api_read_liberty": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "path": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "mock_eda"
+  },
+  "mock_eda:api_report_timing": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {
+      "max_paths": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": "mock_eda"
+  },
+  "mock_eda:api_run_eco": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "strategy": {
+        "required": false,
+        "type": "str"
+      },
+      "target_paths": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": "mock_eda"
+  },
+  "mock_eda:api_run_synthesis": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "effort": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "mock_eda"
+  },
+  "primetime:api_get_design_state": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "primetime"
+  },
+  "primetime:api_load_design": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "path": {
+        "required": true,
+        "type": "str"
+      },
+      "top": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "primetime"
+  },
+  "primetime:api_mcmm_create_scenario": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "corner": {
+        "required": true,
+        "type": "str"
+      },
+      "lib_paths": {
+        "required": true,
+        "type": "list"
+      },
+      "mode": {
+        "required": true,
+        "type": "str"
+      },
+      "name": {
+        "required": true,
+        "type": "str"
+      },
+      "sdc": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "primetime"
+  },
+  "primetime:api_mcmm_report_all": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {
+      "max_paths": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": "primetime"
+  },
+  "primetime:api_read_liberty": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "path": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "primetime"
+  },
+  "primetime:api_read_sdc": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "path": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "primetime"
+  },
+  "primetime:api_report_constraint": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "primetime"
+  },
+  "primetime:api_report_timing": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {
+      "max_paths": {
+        "required": false,
+        "type": "int"
+      },
+      "path_type": {
+        "required": false,
+        "type": "str"
+      },
+      "si_enabled": {
+        "required": false,
+        "type": "bool"
+      }
+    },
+    "tool": "primetime"
+  },
+  "redhawk_sc:api_emir_report_hotspots": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {
+      "top_n": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": "redhawk_sc"
+  },
+  "redhawk_sc:api_get_design_state": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "redhawk_sc"
+  },
+  "redhawk_sc:api_load_design": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "def_file": {
+        "required": true,
+        "type": "str"
+      },
+      "lef": {
+        "required": true,
+        "type": "list"
+      },
+      "libs": {
+        "required": true,
+        "type": "list"
+      },
+      "top": {
+        "required": true,
+        "type": "str"
+      }
+    },
+    "tool": "redhawk_sc"
+  },
+  "redhawk_sc:api_report_violations": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {
+      "limit": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": "redhawk_sc"
+  },
+  "redhawk_sc:api_run_em_analysis": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "em_type": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "redhawk_sc"
+  },
+  "redhawk_sc:api_run_ir_analysis": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "analysis_type": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "redhawk_sc"
+  },
+  "tessent:api_dft_atpg": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "patterns": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": "tessent"
+  },
+  "tessent:api_dft_insert_scan": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "chains": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": "tessent"
+  },
+  "tessent:api_dft_report_coverage": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "tessent"
+  },
+  "tessent:api_get_design_state": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "tessent"
+  },
+  "voltus:api_emir_report_hotspots": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {
+      "top_n": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": "voltus"
+  },
+  "voltus:api_get_design_state": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {},
+    "tool": "voltus"
+  },
+  "voltus:api_load_design": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "lef": {
+        "required": true,
+        "type": "list"
+      },
+      "libs": {
+        "required": true,
+        "type": "list"
+      },
+      "netlist": {
+        "required": true,
+        "type": "str"
+      },
+      "top": {
+        "required": true,
+        "type": "str"
+      },
+      "upf": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "voltus"
+  },
+  "voltus:api_report_violations": {
+    "capability": "read",
+    "kind": "tool",
+    "params": {
+      "limit": {
+        "required": false,
+        "type": "int"
+      }
+    },
+    "tool": "voltus"
+  },
+  "voltus:api_run_em_analysis": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {},
+    "tool": "voltus"
+  },
+  "voltus:api_run_ir_analysis": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "analysis_type": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "voltus"
+  },
+  "voltus:api_run_thermal_analysis": {
+    "capability": "write",
+    "kind": "tool",
+    "params": {
+      "power_map": {
+        "required": false,
+        "type": "str"
+      }
+    },
+    "tool": "voltus"
+  }
+}

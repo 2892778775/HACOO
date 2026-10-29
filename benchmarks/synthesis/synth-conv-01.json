@@ -1,0 +1,46 @@
+{
+  "id": "synth-conv-01",
+  "agent": "synthesis",
+  "tool": "genus",
+  "description": "FE-3: synth-convergence skill 核心循环 — compile -> report_qor -> 知识库选策略 (effort/boundary_opt/ungroup) -> extra_tcl 客制化重编译, 最多 3 轮。Genus mock 序列应答建模 WNS 单调改善: -0.152 -> -0.081 -> 0.012 (达标)",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"},
+    "knowledge_seed": [
+      {"symptom": "综合 medium effort 后 WNS 不达标",
+       "root_cause": "默认 effort 对关键路径优化不足",
+       "resolution": "effort 提升 high; 仍不达标则 boundary_opt + ungroup 打平关键层次",
+       "tags": ["qor", "convergence"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "QoR"}},
+    {"call": "api_synth_elaborate", "args": {"files": ["rtl/chip.v"], "top": "chip"}},
+    {"call": "api_synth_compile", "args": {"effort": "medium"}},
+    {"call": "api_report_qor"},
+    {"call": "api_decision_record", "args": {"stage": "synthesis", "action": "qor_fix_round1",
+                                             "rationale": "基线 WNS=-0.152 (target -0.02), 问题类型 timing -> 策略 effort 提升 high",
+                                             "params": {"wns": -0.152, "target_wns": -0.02, "strategy": "effort_high"}}},
+    {"call": "api_synth_compile", "args": {"effort": "high"}},
+    {"call": "api_report_qor"},
+    {"call": "api_decision_record", "args": {"stage": "synthesis", "action": "qor_fix_round2",
+                                             "rationale": "第2轮 WNS=-0.081, high effort 改善不足 -> 策略 boundary_opt + ungroup 关键层次",
+                                             "params": {"wns": -0.081, "target_wns": -0.02, "strategy": "boundary_opt_ungroup"}}},
+    {"call": "api_synth_compile", "args": {"effort": "high",
+                                           "extra_tcl": "ungroup -flatten [get_cells u_mid]; set_db boundary_optimize true"}},
+    {"call": "api_report_qor"},
+    {"call": "api_decision_record", "args": {"stage": "synthesis", "action": "qor_converged",
+                                             "rationale": "第3轮 WNS=0.012 >= target -0.012, 达标收敛退出, 轨迹 -0.152 -> -0.081 -> 0.012 单调改善",
+                                             "params": {"wns": 0.012, "target_wns": -0.02, "rounds": 3}}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"},
+    {"type": "output_contains", "step": 3, "text": "\"wns\": -0.152"},
+    {"type": "output_contains", "step": 6, "text": "\"wns\": -0.081"},
+    {"type": "output_contains", "step": 9, "text": "\"wns\": 0.012"},
+    {"type": "metric_observed", "metric": "wns", "method": "api_report_qor"},
+    {"type": "metric_observed", "metric": "area", "method": "api_report_qor"}
+  ],
+  "tags": ["synthesis", "qor", "convergence", "fe-3", "golden"]
+}

@@ -1,0 +1,39 @@
+{
+  "id": "apr-metrics-01",
+  "agent": "apr",
+  "tool": "icc2",
+  "requires": ["icc2"],
+  "description": "BE-2 增强: 四子阶段指标 + 独立报告方法解析进观测层 — fp_create:utilization / place_opt:hotspot_count+overflow_max / report_congestion:hotspot_count+overflow_max / cts_report:skew+latency_max+clock_power / route_opt+route_drc_report:drc_count (requires 真实 ICC2, 本机无 binary 时 skip; mock 全链路覆盖见 HacooAprMetricsTest)",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"}
+  },
+  "script": [
+    {"call": "api_load_design", "args": {"netlist": "chip.v", "top": "chip",
+                                         "lib_name": "ndm_lib", "tech_tf": "tech.tf",
+                                         "ndm_libs": ["ref.ndm"]}},
+    {"call": "api_fp_create", "args": {"utilization": 0.7, "aspect_ratio": 1.0,
+                                       "core_margin": 2.0}},
+    {"call": "api_fp_place_macros"},
+    {"call": "api_place_opt"},
+    {"call": "api_report_congestion"},
+    {"call": "api_cts_build", "args": {"target_skew_ps": 50}},
+    {"call": "api_cts_report"},
+    {"call": "api_route_opt"},
+    {"call": "api_route_drc_report"},
+    {"call": "api_decision_record", "args": {"stage": "apr_metrics", "action": "stage_metrics",
+                                             "rationale": "BE-2 增强 阶段指标进观测层验收"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "metric_observed", "metric": "utilization", "method": "api_fp_create"},
+    {"type": "metric_observed", "metric": "hotspot_count", "method": "api_place_opt"},
+    {"type": "metric_observed", "metric": "overflow_max", "method": "api_report_congestion"},
+    {"type": "metric_observed", "metric": "skew", "method": "api_cts_report"},
+    {"type": "metric_observed", "metric": "latency_max", "method": "api_cts_report"},
+    {"type": "metric_observed", "metric": "clock_power", "method": "api_cts_report"},
+    {"type": "metric_observed", "metric": "drc_count", "method": "api_route_opt"},
+    {"type": "metric_observed", "metric": "drc_count", "method": "api_route_drc_report"},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["apr", "metrics", "be-2", "golden"]
+}

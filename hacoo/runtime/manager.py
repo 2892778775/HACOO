@@ -122,7 +122,10 @@ class RuntimeManager:
             try:
                 self._backend_call(inst, "__heartbeat__", timeout=1.0)
                 return
-            except (OSError, protocol.ProtocolError):
+            except (OSError, protocol.ProtocolError, InstanceError):
+                # 后端进程启动慢时 (Windows 冷启动/杀软扫描), 连接可能已进入
+                # backlog 但进程尚未开始服务 -> InstanceError(unreachable),
+                # 与连接被拒同属"尚未就绪", 都应重试直到 ready_timeout
                 time.sleep(0.2)
         raise InstanceError("backend not ready within %.0fs" % self.ready_timeout_s)
 

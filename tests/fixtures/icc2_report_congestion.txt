@@ -1,0 +1,9 @@
+****************************************
+Report : congestion
+Design : soc_top
+Version: T-2022.03
+****************************************
+Both Dirs: Overflow = 30  Max = 8 (6 GRCs)  GRCs = 14 (0.11%)
+H Routing: Overflow = 12  Max = 4 (3 GRCs)
+V Routing: Overflow = 18  Max = 8 (4 GRCs)
+Congestion Hotspots: 7

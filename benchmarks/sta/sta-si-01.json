@@ -1,0 +1,34 @@
+{
+  "id": "sta-si-01",
+  "agent": "sta",
+  "tool": "primetime",
+  "requires": ["primetime"],
+  "description": "SO-3: SI-aware 时序报告 — api_report_timing(si_enabled=true) 命令含 set_si_options, 解析兼容 delta delay/noise 分量; requires=primetime 由 HACOO_PRIMETIME_MOCK=1 或真实 pt_shell 满足",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"},
+    "knowledge_seed": [
+      {"symptom": "SI-aware 打开后 WNS 恶化 0.03ns",
+       "root_cause": "crosstalk delta delay 叠加在长并行走线",
+       "resolution": "对受害网 NDR 加宽/加屏蔽, ECO 后复验 SI-aware 报告",
+       "tags": ["si", "crosstalk"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "crosstalk"}},
+    {"call": "api_load_design", "args": {"path": "chip.v", "top": "chip"}},
+    {"call": "api_read_sdc", "args": {"path": "chip.sdc"}},
+    {"call": "api_report_timing", "args": {"max_paths": 5, "si_enabled": true}},
+    {"call": "api_decision_record", "args": {"stage": "sta", "action": "si_aware_review",
+                                             "rationale": "SI-aware 报告确认 delta delay 对 WNS 的影响, 决定是否 NDR 修复",
+                                             "params": {"si_enabled": true}}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "output_contains", "step": 3, "text": "\"si_enabled\": true"},
+    {"type": "output_contains", "step": 3, "text": "\"wns\": -0.143"},
+    {"type": "metric_observed", "metric": "wns", "method": "api_report_timing"},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["sta", "si", "crosstalk", "so-3", "golden"]
+}

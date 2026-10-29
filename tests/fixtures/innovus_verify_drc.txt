@@ -1,0 +1,6 @@
+*** verify_drc ***
+Verifying DRC violations ...
+  Short: 3
+  Spacing: 8
+  Antenna: 0
+Summary: Total number of violations = 11

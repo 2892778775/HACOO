@@ -1,18 +1,60 @@
 """Voltus adapter — IR/EM + thermal 签核 (voltus -nowin 持久 Tcl 会话)。
 
 static/dynamic IR drop、EM 分析、热分析; 违例解析自 report_rail 输出。
-可执行文件: HACOO_VOLTUS_BIN 或 PATH 中的 voltus。
+可执行文件: HACOO_VOLTUS_BIN 或 PATH 中的 voltus;
+开发/测试可用 HACOO_VOLTUS_MOCK=1 注入录制型 mock shell (接口行为一致)。
+
+SO-7: api_emir_report_hotspots —— IR drop hotspot Top N 结构化输出
+(instance/坐标/层/压降), ir_drop_mv 扁平 key 供观测层趋势检测。
 """
 from __future__ import annotations
 
+import os
 import re
 import time
 from typing import Any, Dict, List, Optional
 
 from .base import ToolAdapter, api_method
-from .shell import TclShell, resolve_binary
+from .shell import MockTclShell, TclShell, resolve_binary
 
 _VIOL_RE = re.compile(r"(\d+)\s+(?:violations?|Violations?)")
+
+# Voltus hotspot 报告行: rank instance x y layer ir_drop(mV) (# 开头为注释)
+_VOLTUS_LINE_RE = re.compile(
+    r"^(\d+)\s+(\S+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(\S+)\s+(-?\d+\.?\d*)\s*$")
+
+# mock 模式的确定性应答, 按 Voltus 真实输出风格编写,
+# 使 parse_ir_hotspots 在 mock 下被严肃测试。
+_MOCK_CANNED = {
+    "report_rail -type ir -hotspots": (
+        "# Voltus Rail Analysis - IR Drop Hotspots\n"
+        "# design: chip   net: VDD\n"
+        "#rank  instance              x        y        layer  ir_drop(mV)\n"
+        "1      u_core/u_alu/mult_u1  120.500  340.250  met5   98.5\n"
+        "2      u_core/lsu_u3         400.000  512.750  met7   76.8\n"
+        "3      u_mem/ctrl_u4          55.250   60.000  met4   65.1\n"),
+}
+
+
+def parse_ir_hotspots(report: str, top_n: int = 20) -> Dict[str, Any]:
+    """Voltus IR hotspot 报告解析 (纯函数)。
+
+    返回 {"hotspots": [{"instance","x","y","layer","ir_drop_mv"}],
+           "worst_drop_mv": float|None}; 按压降降序, 截断 top_n;
+    解析不到时 hotspots 为空 (宽容解析)。
+    """
+    hotspots: List[Dict[str, Any]] = []
+    for line in report.splitlines():
+        m = _VOLTUS_LINE_RE.match(line.strip())
+        if not m:
+            continue
+        hotspots.append({"instance": m.group(2), "x": float(m.group(3)),
+                         "y": float(m.group(4)), "layer": m.group(5),
+                         "ir_drop_mv": float(m.group(6))})
+    hotspots.sort(key=lambda h: h["ir_drop_mv"], reverse=True)
+    hotspots = hotspots[:top_n]
+    return {"hotspots": hotspots,
+            "worst_drop_mv": hotspots[0]["ir_drop_mv"] if hotspots else None}
 
 
 class VoltusAdapter(ToolAdapter):
@@ -25,8 +67,11 @@ class VoltusAdapter(ToolAdapter):
 
     def _voltus(self) -> TclShell:
         if self._shell is None:
-            exe = resolve_binary("voltus", ["voltus"])
-            self._shell = TclShell(exe, ["-nowin"])
+            if os.environ.get("HACOO_VOLTUS_MOCK") == "1":
+                self._shell = MockTclShell("voltus", canned=_MOCK_CANNED)
+            else:
+                exe = resolve_binary("voltus", ["voltus"])
+                self._shell = TclShell(exe, ["-nowin"])
         return self._shell
 
     def __del__(self) -> None:
@@ -107,6 +152,22 @@ class VoltusAdapter(ToolAdapter):
                          "total_violations": sum(counts),
                          "analyses_done": len(self.analyses)},
                 "text": report[-3000:]}
+
+    @api_method(capability="read", description="Report top-N IR drop hotspots (instance/x/y/layer/mV).")
+    def api_emir_report_hotspots(self, top_n: int = 20) -> Dict[str, Any]:
+        """SO-7: IR drop hotspot Top N 结构化输出, 按压降降序;
+        ir_drop_mv 扁平 key 供观测层趋势检测。"""
+        self._require_design()
+        if not any(a["kind"].startswith("ir_") for a in self.analyses):
+            raise RuntimeError("no IR analysis done; call api_run_ir_analysis first")
+        report = self._voltus().cmd("report_rail -type ir -hotspots %d" % top_n,
+                                    timeout=1800)
+        parsed = parse_ir_hotspots(report, top_n)
+        return {"data": {"top": self.design.get("top"), "top_n": top_n,
+                         "ir_drop_mv": parsed["worst_drop_mv"], **parsed},
+                "text": report[-4000:],
+                "artifacts": [{"kind": "report", "name": "ir_hotspots",
+                               "content_tail": report[-2000:]}]}
 
     @api_method(capability="read", description="Dump current Voltus session state.")
     def api_get_design_state(self) -> Dict[str, Any]:

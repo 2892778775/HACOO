@@ -1,0 +1,11 @@
+========================================
+RedHawk-SC IR Drop Hotspot Report
+Design: chip   Scenario: static_ir_run
+========================================
+INSTANCE                 X(um)     Y(um)     LAYER   IR_DROP(mV)
+u_core/u_alu/mult_u1     120.500   340.250   M5      98.5
+u_core/u_alu/add_u2      122.100   338.000   M5      87.2
+u_core/lsu_u3            400.000   512.750   M7      76.8
+u_mem/ctrl_u4             55.250    60.000   M4      65.1
+----------------------------------------
+Worst IR drop: 98.5 mV

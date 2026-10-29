@@ -1,0 +1,3 @@
+*** Report Clock Trees ***
+Clock tree sys_clk: skew 33.7ps, longest insertion delay 402.5ps
+Total clock tree power: 6.420 mW

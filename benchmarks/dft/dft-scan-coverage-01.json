@@ -1,0 +1,26 @@
+{
+  "id": "dft-scan-coverage-01",
+  "agent": "dft",
+  "tool": "mock_eda",
+  "description": "ATPG 覆盖率收敛: 查询知识库的覆盖率提升经验并记录决策",
+  "setup": {
+    "knowledge_seed": [
+      {"symptom": "ATPG coverage 卡在 99.2% 不再上升",
+       "root_cause": "undetectable fault 集中在 clock gating 使能逻辑",
+       "resolution": "插入 control test point 并重跑 ATPG",
+       "tags": ["atpg", "coverage"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "coverage"}},
+    {"call": "api_load_design", "args": {"path": "chip.v", "top": "chip"}},
+    {"call": "api_decision_record", "args": {"stage": "dft_atpg", "action": "test_point_insertion",
+                                             "rationale": "覆盖率未达标, 选择 test point 策略"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["dft", "atpg", "golden"]
+}

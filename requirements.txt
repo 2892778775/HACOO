@@ -1,6 +1,11 @@
 # 核心五层: 仅 Python 标准库 (>= 3.8), 无第三方依赖
 # 以下为可选入口依赖:
 
+# Streamlit Dashboard (可选; python -m hacoo dashboard; 核心层不 import)
+# 注意: streamlit 需要 Python >= 3.9, 可装在另一个解释器环境后用
+# `py -3.13 -m streamlit run dashboard/app.py` 启动
+streamlit>=1.40
+
 # LangChain agent runner (可选入口, 公司 Linux 已装 langchain/vLLM)
 langchain>=0.2
 langchain-openai>=0.1

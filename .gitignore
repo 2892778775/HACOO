@@ -10,12 +10,15 @@ venv/
 .env.*
 !.env.example
 *.key
+env_set.txt
 
 # HACOO runtime data (per-deployment, not source)
 logs/
 runs/
 knowledge/
+observations/
 *.audit
+bench_drc/
 
 # Local binaries / tools
 opencode-cli.exe
@@ -26,3 +29,6 @@ Thumbs.db
 .DS_Store
 .idea/
 .vscode/
+
+# HACOO bench runtime data (Part B.3)
+bench_runs/

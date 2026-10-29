@@ -18,7 +18,7 @@ import subprocess
 import threading
 import time
 import uuid
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 
 def resolve_binary(tool: str, default_names: List[str]) -> str:
@@ -103,6 +103,115 @@ class TclShell:
                 self.proc.wait(timeout=5)
             except (OSError, subprocess.TimeoutExpired):
                 self.proc.kill()
+
+
+class CmdShell:
+    """持久 POSIX shell (bash/sh) 会话 — CLI 环境型平台专用 (如 ISF)。
+
+    `isfsetup <project>` 这类命令通过修改当前 shell 的环境变量/PATH 来
+    激活项目环境, 因此所有后续 ISF 命令必须注入同一个 shell 进程。
+    与 TclShell 的差别: 结束标记用 `echo MARKER:$?` 打印, 同时捕获
+    命令返回码; 返回码非 0 时抛 RuntimeError (含输出尾部)。
+    """
+
+    def __init__(self, executable: str, startup_timeout: float = 30.0) -> None:
+        self.executable = executable
+        self.proc = subprocess.Popen(
+            [executable],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT, text=True, bufsize=1)
+        self._lines: "queue.Queue[str]" = queue.Queue()
+        self._reader = threading.Thread(target=self._read_loop, daemon=True)
+        self._reader.start()
+        self._drain_until_idle(startup_timeout)
+
+    def _read_loop(self) -> None:
+        assert self.proc.stdout is not None
+        for line in self.proc.stdout:
+            self._lines.put(line)
+
+    def _drain_until_idle(self, timeout: float, idle_s: float = 0.3) -> str:
+        out = []
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            try:
+                out.append(self._lines.get(timeout=idle_s))
+            except queue.Empty:
+                break
+        return "".join(out)
+
+    def cmd(self, command: str, timeout: float = 300.0) -> str:
+        """发送一条 shell 命令, 返回到结束标记为止的全部输出。
+
+        返回码非 0 视为命令失败 (经 backend 规范化为 BACKEND_ERROR)。
+        """
+        if self.proc.poll() is not None:
+            raise RuntimeError("%s shell exited (rc=%s)" % (self.executable, self.proc.returncode))
+        marker = "__HACOO_EOM_%s__" % uuid.uuid4().hex[:8]
+        assert self.proc.stdin is not None
+        self.proc.stdin.write('%s; echo "%s:$?"\n' % (command, marker))
+        self.proc.stdin.flush()
+        out: List[str] = []
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            try:
+                line = self._lines.get(timeout=max(0.1, deadline - time.time()))
+            except queue.Empty:
+                break
+            stripped = line.strip()
+            if stripped.startswith(marker):
+                rc = stripped.rsplit(":", 1)[-1]
+                if rc.isdigit() and int(rc) != 0:
+                    raise RuntimeError("command failed (rc=%s): %s\n%s"
+                                       % (rc, command, "".join(out)[-2000:]))
+                return "".join(out)
+            out.append(line)
+        raise RuntimeError("command timed out after %.0fs: %s" % (timeout, command))
+
+    def close(self) -> None:
+        if self.proc.poll() is None:
+            try:
+                assert self.proc.stdin is not None
+                self.proc.stdin.write("exit\n")
+                self.proc.stdin.flush()
+                self.proc.wait(timeout=5)
+            except (OSError, subprocess.TimeoutExpired):
+                self.proc.kill()
+
+
+class MockTclShell:
+    """录制型 mock shell — 无真实 EDA binary 时的开发/测试替身。
+
+    与 TclShell 接口一致 (cmd/close): 每条命令按序记录到 self.commands,
+    返回 canned 表中按子串匹配的确定性应答 (缺省回显 "[mock] ok")。
+    由各 adapter 在 HACOO_<TOOL>_MOCK=1 时注入, 接口行为与真实模式一致;
+    未开 mock 且 binary 缺失时仍走 resolve_binary 的 HACOO_<TOOL>_BIN 引导报错。
+
+    序列应答 (SPEC-evolution C.3 BE-4): canned 的值可以是字符串 (静态应答,
+    向后兼容) 或字符串列表 —— 列表按该 key 的命中次数依次返回, 耗尽后
+    钳制在最后一个元素 (模拟"迭代修复后指标收敛"), 用于 route DRC 逐轮
+    下降等迭代收敛场景的确定性建模。
+    """
+
+    def __init__(self, tool: str, canned: Optional[Dict[str, Any]] = None) -> None:
+        self.tool = tool
+        self.commands: List[str] = []   # 已执行命令 (按发送顺序)
+        self._canned = dict(canned or {})
+        self._seq_hits: Dict[str, int] = {}  # 序列应答: 每个 key 已命中次数
+
+    def cmd(self, command: str, timeout: float = 300.0) -> str:
+        self.commands.append(command)
+        for key, response in self._canned.items():
+            if key in command:
+                if isinstance(response, (list, tuple)):
+                    index = self._seq_hits.get(key, 0)
+                    self._seq_hits[key] = index + 1
+                    return response[min(index, len(response) - 1)]
+                return response
+        return "[mock:%s] ok: %s\n" % (self.tool, command)
+
+    def close(self) -> None:
+        pass
 
 
 def run_batch(argv: List[str], timeout: float = 3600.0,

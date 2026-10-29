@@ -67,6 +67,12 @@ class DecisionLog:
 
     # ------------------------------------------------------------ 查询
 
+    def get(self, decision_id: str) -> Optional[Dict[str, Any]]:
+        for e in self._load_all():
+            if e["decision_id"] == decision_id:
+                return e
+        return None
+
     def _load_all(self) -> List[Dict[str, Any]]:
         if not os.path.isfile(self.path):
             return []

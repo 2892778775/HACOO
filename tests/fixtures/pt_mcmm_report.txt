@@ -1,0 +1,24 @@
+****************************************
+Report : timing -scenarios {func.ss_0v99_125c func.ff_1v10_m40c test.ss_0v99_125c test.ff_1v10_m40c}
+Design : chip
+Version: U-2022.12
+Date   : Tue Oct 28 19:00:00 2026
+****************************************
+
+Scenario 'func.ss_0v99_125c'
+  Startpoint: u_reg_a/Q (rising edge-triggered flip-flop)
+  Endpoint:   u_reg_b/D (rising edge-triggered flip-flop)
+  slack (VIOLATED)  -0.152
+  slack (VIOLATED)  -0.080
+  slack (MET)        0.012
+
+Scenario 'func.ff_1v10_m40c'
+  slack (MET)        0.031
+  slack (MET)        0.064
+
+Scenario 'test.ss_0v99_125c'
+  slack (VIOLATED)  -0.210
+  slack (MET)        0.005
+
+Scenario 'test.ff_1v10_m40c'
+  slack (MET)        0.045

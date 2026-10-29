@@ -1,0 +1,40 @@
+{
+  "id": "syn-qor-01",
+  "agent": "synthesis",
+  "tool": "genus",
+  "requires": ["genus"],
+  "description": "FE-1: 真实综合 adapter (Genus) — elaborate -> compile -> report_qor 返回结构化五字段 QoR; requires=genus 由 setup.mock_tool_state 的 mock 模式在本机满足 (无真实 EDA binary)",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"},
+    "knowledge_seed": [
+      {"symptom": "综合 high effort 后 WNS 改善但面积超标",
+       "root_cause": "area 约束缺失导致优化器只追时序",
+       "resolution": "medium effort + 显式 max_area 约束通常更平衡",
+       "tags": ["qor", "effort"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "effort"}},
+    {"call": "api_synth_elaborate", "args": {"files": ["rtl/chip.v"], "top": "chip"}},
+    {"call": "api_synth_compile", "args": {"effort": "medium"}},
+    {"call": "api_report_qor"},
+    {"call": "api_decision_record", "args": {"stage": "synthesis", "action": "effort_choice",
+                                             "rationale": "按 QoR 三角选择综合 effort"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "output_contains", "step": 3, "text": "\"wns\""},
+    {"type": "output_contains", "step": 3, "text": "\"tns\""},
+    {"type": "output_contains", "step": 3, "text": "\"area\""},
+    {"type": "output_contains", "step": 3, "text": "\"leakage\""},
+    {"type": "output_contains", "step": 3, "text": "\"total_power\""},
+    {"type": "metric_observed", "metric": "wns", "method": "api_report_qor"},
+    {"type": "metric_observed", "metric": "tns", "method": "api_report_qor"},
+    {"type": "metric_observed", "metric": "area", "method": "api_report_qor"},
+    {"type": "metric_observed", "metric": "leakage", "method": "api_report_qor"},
+    {"type": "metric_observed", "metric": "total_power", "method": "api_report_qor"},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["synthesis", "qor", "fe-1", "golden"]
+}

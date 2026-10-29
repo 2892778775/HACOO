@@ -1,0 +1,39 @@
+{
+  "id": "eco-scope-01",
+  "agent": "apr",
+  "tool": "mock_eda",
+  "description": "EC-2: eco-scope-control skill 核心 — ECO 前 freeze 检查: 受影响区域与 freeze 重叠 -> 直接 ECO 被拒绝(freeze_overlap=true) -> 替代方案(spare cell + Vt swap, metal-only)输出并执行 -> 决策链完整",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"},
+    "knowledge_seed": [
+      {"symptom": "ECO 影响区域与 block freeze 区域重叠",
+       "root_cause": "违例路径穿过已 freeze 的接口区",
+       "resolution": "禁止直接动手; 替代: spare cell 替换 + Vt swap (metal-only), 不可行则升级 PM 解冻",
+       "tags": ["eco", "freeze"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "freeze"}},
+    {"call": "api_load_design", "args": {"path": "chip.v", "top": "chip"}},
+    {"call": "api_decision_record", "args": {"stage": "eco_scope", "action": "eco_rejected",
+                                             "rationale": "受影响路径 bbox (120,340)-(180,400) 与 freeze 区 (100,300)-(200,450) 重叠 ~60%, 拒绝直接 ECO (修 setup 插 buffer 会动 freeze 区单元)",
+                                             "params": {"freeze_overlap": true, "bbox": "120,340,180,400", "rejected": "direct_eco"}}},
+    {"call": "api_decision_record", "args": {"stage": "eco_scope", "action": "eco_alternative",
+                                             "rationale": "替代方案: spare cell 替换实现 buffer 插入 + Vt swap 提驱动, 全程 metal-only, 对 freeze 区零扰动",
+                                             "params": {"strategy": "metal_only_spare_cell", "freeze_overlap": true}}},
+    {"call": "api_run_eco", "args": {"strategy": "vt_swap", "target_paths": 3}},
+    {"call": "api_report_timing", "args": {"max_paths": 10}},
+    {"call": "api_decision_record", "args": {"stage": "eco_scope", "action": "eco_applied",
+                                             "rationale": "metal-only 替代方案执行完毕, 复验时序改善且 freeze 区未动; freeze 邻近 net 移交 pv 增量 DRC",
+                                             "params": {"strategy": "metal_only_spare_cell", "freeze_disturbed": false}}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"},
+    {"type": "output_contains", "step": 2, "text": "\"freeze_overlap\": true"},
+    {"type": "output_contains", "step": 3, "text": "\"strategy\": \"metal_only_spare_cell\""},
+    {"type": "metric_observed", "metric": "wns", "method": "api_report_timing"}
+  ],
+  "tags": ["apr", "eco", "freeze", "ec-2", "golden"]
+}

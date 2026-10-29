@@ -1,0 +1,16 @@
+//---------------------------------------------------------
+// Statistics Report
+//   Design: chip   Patterns: 2000
+//---------------------------------------------------------
+  Fault Classes   #faults
+  -------------   -------
+  DS (det_simulation)      84123
+  DI (det_implication)       2044
+  AU (atpg_untestable)      1043
+  ND (not_detected)         1902
+  -------------
+  total                    89112
+
+  test_coverage:  94.18%
+  fault_coverage: 93.02%
+  atpg_effectiveness: 98.83%

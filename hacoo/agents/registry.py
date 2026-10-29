@@ -37,49 +37,69 @@ class AgentSpec:
     description: str
     tools: List[str]          # 允许调用的 adapter 工具白名单
     focus: List[str] = field(default_factory=list)  # 领域关注点 (写进 prompt)
+    version: str = "1.0.0"    # 语义化版本 (SPEC-evolution A.3; hacoo.agents.json 可覆盖)
 
     def to_dict(self) -> Dict:
         return {"name": self.name, "title": self.title, "stage": self.stage,
-                "description": self.description, "tools": self.tools, "focus": self.focus}
+                "description": self.description, "tools": self.tools,
+                "focus": self.focus, "version": self.version}
 
 
 AGENTS: Dict[str, AgentSpec] = {a.name: a for a in [
     AgentSpec(
         name="dft", title="DFT Agent", stage="frontend",
         description="可测性设计: scan chain 插入、ATPG 覆盖率、MBIST、boundary scan。",
-        tools=["icc2", "innovus", "mock_eda"],
+        tools=["tessent", "dftmax", "icc2", "innovus", "mock_eda"],
         focus=["scan chain 规划与插入", "ATPG 覆盖率目标与 pattern 优化",
-               "MBIST/BISR 策略", "测试功耗与 shift 频率权衡"]),
+               "MBIST/BISR 策略", "测试功耗与 shift 频率权衡",
+               "覆盖率未达标闭环 (AU/UD/ND 归因分类 -> test point/pattern "
+               "策略 -> 复跑 ATPG, 升级人工判据见 dft-coverage-closure skill)"]),
     AgentSpec(
         name="synthesis", title="Synthesis Agent", stage="frontend",
         description="逻辑综合: RTL -> gate netlist, 时序/面积/功耗权衡, DFT-aware 综合。",
-        tools=["icc2", "innovus", "mock_eda"],
+        tools=["genus", "dc_shell", "icc2", "innovus", "mock_eda"],
         focus=["时序驱动优化 (effort/target)", "面积与功耗 tradeoff",
-               "约束完整性检查 (SDC)", "与 DFT 插入的先后次序"]),
+               "约束完整性检查 (SDC)", "与 DFT 插入的先后次序",
+               "QoR 收敛迭代 (effort/boundary_opt/ungroup 策略选择与升级人工 "
+               "判据见 synth-convergence skill)"]),
     AgentSpec(
         name="apr", title="APR Agent", stage="backend",
         description="自动布局布线: floorplan、placement、CTS、routing; 支持 3D IC 分区与 hybrid bonding/TSV 感知。",
         tools=["icc2", "innovus", "mock_eda"],
         focus=["floorplan 与 die 分区 (3D IC)", "congestion / density 控制",
-               "CTS skew 与 useful skew", "hybrid bonding / TSV 布局约束"]),
+               "CTS skew 与 useful skew", "hybrid bonding / TSV 布局约束",
+               "承接 irem 移交的 EMIR 修复 (decap/PG 加密, 交接决策链见 "
+               "emir-fix-strategy skill)",
+               "ECO 范围控制 (freeze 区比对; spare cell/metal-only 优先; "
+               "波及 freeze 给替代方案不动手, 见 eco-scope-control skill)"]),
     AgentSpec(
         name="sta", title="STA Signoff Agent", stage="signoff",
         description="静态时序分析签核: 多 corner 时序、WNS/TNS、违例分类与 ECO 建议。",
         tools=["primetime", "mock_eda"],
         focus=["多 corner/multi-mode 时序收敛", "WNS/TNS 与违例路径分类",
-               "时序 ECO 建议 (size/insert buffer/Vt swap)", "OCV/AOCV 裕度设置"]),
+               "MCMM 场景管理 (api_mcmm_create_scenario/api_mcmm_report_all, "
+               "签核必须按场景组报 per-scenario 与全局最差值)",
+               "时序 ECO 建议 (size/insert buffer/Vt swap; 排序与冲突检测见 "
+               "sta-eco-priority skill)", "OCV/AOCV 裕度设置"]),
     AgentSpec(
         name="pv", title="PV Signoff Agent", stage="signoff",
         description="物理验证: DRC、LVS、ANT、ERC; 先进节点 rule deck 与 waiver 管理。",
         tools=["calibre", "mock_eda"],
         focus=["DRC 违例分类与修复优先级", "LVS 不一致定位",
-               "天线效应与 ERC", "waiver 记录与追踪"]),
+               "天线效应与 ERC",
+               "违例分派 (真实版图问题->apr / deck 设置问题->flow, "
+               "聚类与判定纪律见 pv-debug-triage skill)",
+               "waiver 记录与追踪 (api_calibre_waive 为问责敏感操作: 必须先 "
+               "api_decision_record 记录 waiver 理由, 网关强制 "
+               "DECISION_REQUIRED; justification 必填)"]),
     AgentSpec(
         name="irem", title="IR/EM Signoff Agent", stage="signoff",
         description="压降与电迁移签核: static/dynamic IR drop、EM 寿命、PG 网络加固建议。",
         tools=["redhawk_sc", "voltus", "mock_eda"],
         focus=["static/dynamic IR drop 预算", "EM 违例与线宽/via 加固",
-               "PG mesh 密度调整", "decap 插入策略"]),
+               "PG mesh 密度调整", "decap 插入策略",
+               "hotspot 归因与修复策略 (decap/PG/高翻转归因, 移交 apr 的 "
+               "交接理由必须 decision_record, 见 emir-fix-strategy skill)"]),
     AgentSpec(
         name="thermal", title="Thermal Signoff Agent", stage="signoff",
         description="热签核: 热分布图、热点定位、3D 堆叠层间热耦合与 TTV 规划建议。",
@@ -140,7 +160,9 @@ def is_enabled(name: str, path: Optional[str] = None) -> bool:
 
 def list_agents(path: Optional[str] = None) -> List[Dict]:
     enabled = set(load_enabled(path))
-    return [dict(spec.to_dict(), enabled=spec.name in enabled)
+    versions = load_versions(path)
+    return [dict(spec.to_dict(), enabled=spec.name in enabled,
+                 version=versions.get(spec.name, spec.version))
             for spec in sorted(AGENTS.values(), key=lambda s: (s.stage, s.name))]
 
 
@@ -148,11 +170,59 @@ def get(name: str) -> Optional[AgentSpec]:
     return AGENTS.get(name)
 
 
+# ------------------------------------------------------------ 版本覆盖 (SPEC-evolution A.3)
+
+def load_versions(path: Optional[str] = None) -> Dict[str, str]:
+    """读取 hacoo.agents.json 的 "versions" 覆盖表 ({"sta": "1.3.0", ...})。
+
+    版本 bump 约定: 知识库新增条目 -> patch; 新增/修改 skill 或白名单 -> minor;
+    Agent 职责变化 -> major。
+    """
+    cfg_path = _config_path(path)
+    if not os.path.isfile(cfg_path):
+        return {}
+    try:
+        with open(cfg_path, "r", encoding="utf-8") as fh:
+            cfg = json.load(fh)
+    except ValueError:
+        return {}
+    raw = cfg.get("versions") or {}
+    return {n: str(v) for n, v in raw.items() if n in AGENTS}
+
+
+def set_version(name: str, version: str, path: Optional[str] = None) -> Dict[str, str]:
+    """设置/覆盖某 Agent 的版本号 (写入 hacoo.agents.json 的 versions 表)。"""
+    if name not in AGENTS:
+        raise KeyError("unknown agent: '%s' (known: %s)" % (name, ", ".join(sorted(AGENTS))))
+    cfg_path = _config_path(path)
+    cfg: Dict = {}
+    if os.path.isfile(cfg_path):
+        with open(cfg_path, "r", encoding="utf-8") as fh:
+            cfg = json.load(fh)
+    versions = dict(cfg.get("versions") or {})
+    versions[name] = version
+    cfg["versions"] = versions
+    if "enabled" not in cfg:  # 保持文件自洽: 缺省视为全部启用
+        cfg["enabled"] = sorted(AGENTS)
+    with open(cfg_path, "w", encoding="utf-8") as fh:
+        json.dump(cfg, fh, ensure_ascii=False, indent=2)
+    return versions
+
+
+def version_of(name: str, path: Optional[str] = None) -> str:
+    """Agent 的生效版本: hacoo.agents.json 覆盖优先, 否则 AgentSpec 默认值。"""
+    spec = AGENTS.get(name)
+    if spec is None:
+        raise KeyError("unknown agent: '%s' (known: %s)" % (name, ", ".join(sorted(AGENTS))))
+    return load_versions(path).get(name, spec.version)
+
+
 # ------------------------------------------------------------ OpenCode 同步
 
 _AGENT_TEMPLATE = """---
 description: "HACOO {title} — {description}"
 mode: subagent
+version: {version}
 tools:
   hacoo*: true
   bash: false
@@ -186,7 +256,16 @@ tools only.
    `hacoo_decision_outcome(decision_id=..., status="ok"|"failed", metrics=..., note=...)`.
 4. When you hit a NEW problem and solve it, persist the lesson:
    `hacoo_knowledge_add(agent="{name}", symptom=..., root_cause=...,
-   resolution=..., tags=[...])` so you never solve the same problem twice.
+   resolution=..., tags=[...], profile=<当前 design 画像>)` so you never solve
+   the same problem twice. The profile (foundry/node/block_type) is MANDATORY
+   when known — lessons are retrieved profile-aware (X-2); a lesson without
+   profile is a generic one and ranks below profile-matched ones.
+5. When a human corrects you in conversation (correction semantics), you MUST
+   persist it via `hacoo_feedback(agent="{name}", content=..., decision_id=...)`
+   — do not just change your answer in-dialog; the lesson must outlive the chat.
+6. After each flow run finishes, call `hacoo_insights_scan(agent="{name}")` and
+   briefly report any `new`-status insights to the human (one per line, with
+   evidence references).
 
 # Rules
 - Never invent numbers the backend did not return.
@@ -195,10 +274,11 @@ tools only.
 """
 
 
-def render_agent_md(spec: AgentSpec) -> str:
+def render_agent_md(spec: AgentSpec, version: Optional[str] = None) -> str:
     return _AGENT_TEMPLATE.format(
         name=spec.name, title=spec.title, stage=spec.stage,
         description=spec.description,
+        version=version or spec.version,
         tools=", ".join(spec.tools),
         focus_bullets="\n".join("- " + f for f in spec.focus),
         marker=GENERATED_MARKER)
@@ -206,15 +286,19 @@ def render_agent_md(spec: AgentSpec) -> str:
 
 def sync_opencode(agent_dir: str = OPENCODE_AGENT_DIR,
                   path: Optional[str] = None) -> Dict[str, List[str]]:
-    """为启用的 Agent 生成 .opencode/agent/hacoo-<name>.md; 清理被禁 Agent 的旧文件。"""
+    """为启用的 Agent 生成 .opencode/agent/hacoo-<name>.md; 清理被禁 Agent 的旧文件。
+
+    frontmatter 写入生效版本号 (hacoo.agents.json 的 versions 覆盖优先)。
+    """
     os.makedirs(agent_dir, exist_ok=True)
     enabled = set(load_enabled(path))
+    versions = load_versions(path)
     written, removed = [], []
     for name, spec in AGENTS.items():
         target = os.path.join(agent_dir, "hacoo-%s.md" % name)
         if name in enabled:
             with open(target, "w", encoding="utf-8") as fh:
-                fh.write(render_agent_md(spec))
+                fh.write(render_agent_md(spec, version=versions.get(name, spec.version)))
             written.append(target)
         elif os.path.isfile(target):
             with open(target, "r", encoding="utf-8") as fh:

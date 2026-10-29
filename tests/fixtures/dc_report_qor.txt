@@ -1,0 +1,68 @@
+****************************************
+Report : qor
+Design : chip
+Version: T-2022.03
+Date   : Tue Oct 27 22:14:03 2026
+****************************************
+
+  Timing Path Group 'clk'
+  -----------------------------------
+  Levels of Logic:              14.00
+  Critical Path Length:          1.92
+  Critical Path Slack:          -0.084
+  Critical Path Clk Period:      2.00
+  Total Negative Slack:         -1.237
+  No. of Violating Paths:        9.00
+  Worst Hold Violation:          0.00
+  Total Hold Violation:          0.00
+  No. of Hold Violations:        0.00
+  -----------------------------------
+
+  Cell Count
+  -----------------------------------
+  Hierarchical Cell Count:          6
+  Leaf Cell Count:               1487
+  Buf/Inv Cell Count:            203
+  -----------------------------------
+
+  Area
+  -----------------------------------
+  Combinational Area:     1123.4560
+  Noncombinational Area:   489.0120
+  Buf/Inv Area:            87.6540
+  Macro/Black Box Area:    210.0000
+  Net Area:                 41.2000
+  -----------------------------------
+  Cell Area:              1822.4680
+  Design Area:            1863.6680
+
+  Design Rules
+  -----------------------------------
+  Total Number of Nets:          1902
+  Nets With Violations:             0
+  -----------------------------------
+
+****************************************
+Report : power
+-analysis_effort low
+Design : chip
+Version: T-2022.03
+Date   : Tue Oct 27 22:14:05 2026
+****************************************
+
+Library(s) Used:
+
+    tt (File: /libs/tt.db)
+
+                        Internal   Switching   Leakage     Total
+Power Group             Power      Power       Power       Power    (  mW )
+----------------------------------------------------------------------
+io_pad                  0.0000     0.0000      0.0000      0.0000
+memory                  0.0000     0.0000      0.0000      0.0000
+black_box               0.0000     0.0000      0.0000      0.0000
+clock_network           0.5123     0.1024      0.0210      0.6357
+register                0.8234     0.2031      0.1180      1.1445
+combinational           0.4021     0.3055      0.2030      0.9106
+sequential              0.0000     0.0000      0.0000      0.0000
+----------------------------------------------------------------------
+Total                   1.7378     0.6110      0.3420      2.6908

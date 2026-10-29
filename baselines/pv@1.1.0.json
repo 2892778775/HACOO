@@ -1,0 +1,14 @@
+{
+  "agent": "pv",
+  "version": "1.1.0",
+  "ts": 1793188948.97,
+  "pass_rate": 1.0,
+  "cases": {
+    "pv-drc-triage-01": {
+      "pass": true
+    },
+    "pv-lvs-01": {
+      "pass": true
+    }
+  }
+}

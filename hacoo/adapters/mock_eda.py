@@ -24,6 +24,7 @@ class MockEDAAdapter(ToolAdapter):
         self.design: Dict[str, Any] = {}      # 已加载设计
         self.libs: List[str] = []             # 已读入库
         self.synthesis_runs: List[Dict[str, Any]] = []
+        self.eco_rounds: List[Dict[str, Any]] = []  # EC-1: ECO 迭代历史
         self._seed = int(hashlib.md5(str(id(self)).encode()).hexdigest()[:8], 16)
 
     # ------------------------------------------------------------ 工具语义
@@ -32,10 +33,18 @@ class MockEDAAdapter(ToolAdapter):
         if not self.design:
             raise RuntimeError("no design loaded; call api_load_design first")
 
+    # ECO 每轮对全路径的确定性改善量 (ns) 与收敛上限; 最坏 base=-1.0 时
+    # 3 轮内收敛到 >= 0 (eco_loop 模板 max_iter=5 的确定性上界依据)。
+    _ECO_STEP_NS = 0.4
+    _ECO_CEIL_NS = 0.05
+
     def _slack(self, tag: str) -> float:
-        """由持久状态确定性地生成伪时序数 (同一实例多次调用结果一致)。"""
+        """由持久状态确定性地生成伪时序数 (同一实例多次调用结果一致);
+        ECO 迭代单调改善 slack (EC-1: 建模 ECO 收敛循环)。"""
         h = hashlib.md5(("%s|%s|%d" % (self.design.get("top", ""), tag, self._seed)).encode()).hexdigest()
-        return round((int(h[:8], 16) % 2000 - 1000) / 1000.0, 3)
+        base = (int(h[:8], 16) % 2000 - 1000) / 1000.0
+        improved = base + len(self.eco_rounds) * self._ECO_STEP_NS
+        return round(min(improved, self._ECO_CEIL_NS), 3)
 
     # ------------------------------------------------------------ api_* 方法
 
@@ -77,8 +86,26 @@ class MockEDAAdapter(ToolAdapter):
                          "paths": paths, "synthesis_runs": len(self.synthesis_runs)},
                 "text": "WNS=%.3f ns, TNS=%.3f ns over %d paths" % (wns, tns, len(paths))}
 
+    @api_method(capability="write",
+                description="Apply one ECO round (size_up/vt_swap/buffer_insert); timing improves deterministically per round.")
+    def api_run_eco(self, strategy: str = "size_up",
+                    target_paths: int = 5) -> Dict[str, Any]:
+        """执行一轮时序 ECO (mock: 记录策略, 后续 api_report_timing 的
+        slack 单调改善 _ECO_STEP_NS/轮, 封顶 _ECO_CEIL_NS — 建模
+        EC-1 eco_loop 的迭代收敛)。"""
+        self._require_design()
+        if strategy not in ("size_up", "vt_swap", "buffer_insert"):
+            raise ValueError("strategy must be size_up|vt_swap|buffer_insert")
+        record = {"strategy": strategy, "target_paths": target_paths,
+                  "round": len(self.eco_rounds) + 1}
+        self.eco_rounds.append(record)
+        return {"data": dict(record, eco_rounds=len(self.eco_rounds)),
+                "text": "eco round %d applied (strategy=%s)"
+                        % (record["round"], strategy)}
+
     @api_method(capability="read", description="Dump current backend state (for debugging/state checks).")
     def api_get_design_state(self) -> Dict[str, Any]:
         """查看当前实例的持久状态。"""
         return {"data": {"design": self.design or None, "libs": list(self.libs),
-                         "synthesis_runs": len(self.synthesis_runs)}}
+                         "synthesis_runs": len(self.synthesis_runs),
+                         "eco_rounds": len(self.eco_rounds)}}

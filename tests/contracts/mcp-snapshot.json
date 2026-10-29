@@ -1,0 +1,513 @@
+{
+  "hacoo_call": {
+    "properties": {
+      "agent": {
+        "description": "calling agent name, e.g. 'sta'",
+        "type": "string"
+      },
+      "arguments": {
+        "description": "method arguments",
+        "type": "object"
+      },
+      "async_": {
+        "description": "submit as async task (R8)",
+        "type": "boolean"
+      },
+      "instance_id": {
+        "type": "string"
+      },
+      "method": {
+        "type": "string"
+      },
+      "run_id": {
+        "description": "flow run id for traceability",
+        "type": "string"
+      }
+    },
+    "required": [
+      "instance_id",
+      "method"
+    ],
+    "type": "object"
+  },
+  "hacoo_decision_outcome": {
+    "properties": {
+      "decision_id": {
+        "type": "string"
+      },
+      "metrics": {
+        "type": "object"
+      },
+      "note": {
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "ok",
+          "failed",
+          "skipped"
+        ],
+        "type": "string"
+      }
+    },
+    "required": [
+      "decision_id",
+      "status"
+    ],
+    "type": "object"
+  },
+  "hacoo_decision_record": {
+    "properties": {
+      "action": {
+        "type": "string"
+      },
+      "agent": {
+        "type": "string"
+      },
+      "params": {
+        "type": "object"
+      },
+      "rationale": {
+        "type": "string"
+      },
+      "run_id": {
+        "type": "string"
+      },
+      "stage": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "agent",
+      "stage",
+      "action",
+      "rationale"
+    ],
+    "type": "object"
+  },
+  "hacoo_feedback": {
+    "properties": {
+      "agent": {
+        "type": "string"
+      },
+      "content": {
+        "description": "feedback content in natural language",
+        "type": "string"
+      },
+      "decision_id": {
+        "description": "optional decision to bind to",
+        "type": "string"
+      },
+      "feedback_type": {
+        "enum": [
+          "correction",
+          "confirmation",
+          "note"
+        ],
+        "type": "string"
+      },
+      "run_id": {
+        "type": "string"
+      },
+      "tags": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "agent",
+      "content"
+    ],
+    "type": "object"
+  },
+  "hacoo_flow_start": {
+    "properties": {
+      "params": {
+        "description": "template params, e.g. design_path/top",
+        "type": "object"
+      },
+      "template": {
+        "description": "flow template name",
+        "type": "string"
+      }
+    },
+    "required": [
+      "template"
+    ],
+    "type": "object"
+  },
+  "hacoo_flow_status": {
+    "properties": {
+      "run_id": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "run_id"
+    ],
+    "type": "object"
+  },
+  "hacoo_flow_trace": {
+    "properties": {
+      "run_id": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "run_id"
+    ],
+    "type": "object"
+  },
+  "hacoo_insight_review": {
+    "properties": {
+      "action": {
+        "enum": [
+          "confirm",
+          "dismiss"
+        ],
+        "type": "string"
+      },
+      "auto_kb": {
+        "type": "boolean"
+      },
+      "create_upgrade": {
+        "type": "boolean"
+      },
+      "insight_id": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "insight_id",
+      "action"
+    ],
+    "type": "object"
+  },
+  "hacoo_insights_list": {
+    "properties": {
+      "agent": {
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "anomaly",
+          "trend",
+          "blind_spot",
+          "self_issue"
+        ],
+        "type": "string"
+      },
+      "limit": {
+        "type": "integer"
+      },
+      "status": {
+        "enum": [
+          "new",
+          "confirmed",
+          "dismissed"
+        ],
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
+  "hacoo_insights_scan": {
+    "properties": {
+      "agent": {
+        "type": "string"
+      },
+      "window_days": {
+        "type": "integer"
+      }
+    },
+    "type": "object"
+  },
+  "hacoo_knowledge_add": {
+    "properties": {
+      "agent": {
+        "type": "string"
+      },
+      "resolution": {
+        "type": "string"
+      },
+      "root_cause": {
+        "type": "string"
+      },
+      "run_id": {
+        "type": "string"
+      },
+      "symptom": {
+        "type": "string"
+      },
+      "tags": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "agent",
+      "symptom",
+      "resolution"
+    ],
+    "type": "object"
+  },
+  "hacoo_knowledge_query": {
+    "properties": {
+      "agent": {
+        "type": "string"
+      },
+      "keyword": {
+        "type": "string"
+      },
+      "limit": {
+        "type": "integer"
+      },
+      "tags": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "agent"
+    ],
+    "type": "object"
+  },
+  "hacoo_knowledge_review": {
+    "properties": {
+      "action": {
+        "enum": [
+          "approve",
+          "reject"
+        ],
+        "type": "string"
+      },
+      "entry_id": {
+        "type": "string"
+      },
+      "note": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "entry_id",
+      "action"
+    ],
+    "type": "object"
+  },
+  "hacoo_list_agents": {
+    "properties": {},
+    "type": "object"
+  },
+  "hacoo_list_instances": {
+    "properties": {},
+    "type": "object"
+  },
+  "hacoo_list_methods": {
+    "properties": {
+      "tool": {
+        "description": "optional tool filter, e.g. 'mock_eda'",
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
+  "hacoo_method_detail": {
+    "properties": {
+      "method": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "method"
+    ],
+    "type": "object"
+  },
+  "hacoo_ping": {
+    "properties": {},
+    "type": "object"
+  },
+  "hacoo_release_instance": {
+    "properties": {
+      "instance_id": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "instance_id"
+    ],
+    "type": "object"
+  },
+  "hacoo_review_queue": {
+    "properties": {
+      "agent": {
+        "type": "string"
+      },
+      "limit": {
+        "type": "integer"
+      }
+    },
+    "type": "object"
+  },
+  "hacoo_runs_list": {
+    "properties": {
+      "limit": {
+        "type": "integer"
+      },
+      "status": {
+        "enum": [
+          "running",
+          "success",
+          "failed"
+        ],
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
+  "hacoo_spawn_instance": {
+    "properties": {
+      "tool": {
+        "description": "registered tool name",
+        "type": "string"
+      }
+    },
+    "required": [
+      "tool"
+    ],
+    "type": "object"
+  },
+  "hacoo_task_cancel": {
+    "properties": {
+      "task_id": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "task_id"
+    ],
+    "type": "object"
+  },
+  "hacoo_task_status": {
+    "properties": {
+      "task_id": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "task_id"
+    ],
+    "type": "object"
+  },
+  "hacoo_upgrade_list": {
+    "properties": {
+      "limit": {
+        "type": "integer"
+      },
+      "status": {
+        "enum": [
+          "proposed",
+          "accepted",
+          "in_progress",
+          "done",
+          "rejected"
+        ],
+        "type": "string"
+      },
+      "target": {
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
+  "hacoo_upgrade_propose": {
+    "properties": {
+      "acceptance": {
+        "description": "verifiable acceptance criteria",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "agent_capability",
+          "skill_new",
+          "skill_update",
+          "knowledge_bulk",
+          "adapter_method",
+          "platform_feature"
+        ],
+        "type": "string"
+      },
+      "motivation": {
+        "type": "string"
+      },
+      "proposed_change": {
+        "type": "string"
+      },
+      "source": {
+        "enum": [
+          "human",
+          "insight",
+          "review"
+        ],
+        "type": "string"
+      },
+      "source_ref": {
+        "description": "ins-xxx / kb-xxx or null",
+        "type": "string"
+      },
+      "target": {
+        "description": "agent/skill/tool name or 'platform'",
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "title",
+      "kind",
+      "target",
+      "motivation"
+    ],
+    "type": "object"
+  },
+  "hacoo_upgrade_update": {
+    "properties": {
+      "note": {
+        "type": "string"
+      },
+      "proposal_id": {
+        "type": "string"
+      },
+      "to_status": {
+        "enum": [
+          "accepted",
+          "in_progress",
+          "done",
+          "rejected"
+        ],
+        "type": "string"
+      },
+      "version_after": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "proposal_id",
+      "to_status"
+    ],
+    "type": "object"
+  },
+  "hacoo_whoami": {
+    "properties": {},
+    "type": "object"
+  }
+}

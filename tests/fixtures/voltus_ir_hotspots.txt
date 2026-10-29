@@ -1,0 +1,6 @@
+# Voltus Rail Analysis - IR Drop Hotspots
+# design: chip   net: VDD
+#rank  instance              x        y        layer  ir_drop(mV)
+1      u_core/u_alu/mult_u1  120.500  340.250  met5   98.5
+2      u_core/lsu_u3         400.000  512.750  met7   76.8
+3      u_mem/ctrl_u4          55.250   60.000  met4   65.1

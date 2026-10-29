@@ -1,0 +1,25 @@
+{
+  "id": "emir-hotspot-01",
+  "agent": "irem",
+  "tool": "redhawk_sc",
+  "description": "SO-7: IR 分析后提取 Top N hotspot, 断言结构化 instance/坐标/压降与最差值",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"}
+  },
+  "script": [
+    {"call": "api_load_design", "args": {"def_file": "chip.def", "top": "chip",
+                                         "lef": ["tech.lef"], "libs": ["ss.lib"]}},
+    {"call": "api_run_ir_analysis", "args": {"analysis_type": "static"}},
+    {"call": "api_emir_report_hotspots", "args": {"top_n": 20}},
+    {"call": "api_decision_record", "args": {"stage": "emir_hotspot", "action": "locate_hotspots",
+                                             "rationale": "SO-7 hotspot 定位是修复策略输入"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "output_contains", "step": 2, "text": "worst_drop_mv"},
+    {"type": "output_contains", "step": 2, "text": "u_core/u_alu/mult_u1"},
+    {"type": "output_contains", "step": 2, "text": "ir_drop_mv"},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["irem", "emir", "so-7", "golden"]
+}

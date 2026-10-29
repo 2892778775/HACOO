@@ -1,0 +1,33 @@
+{
+  "id": "sta-eco-priority-01",
+  "agent": "sta",
+  "tool": "mock_eda",
+  "description": "SO-2: 混合 violation 场景的 ECO 优先级排序, 断言排序输出 + setup/hold 冲突标记 + 决策记录",
+  "setup": {
+    "knowledge_seed": [
+      {"symptom": "u_alu group Vt swap 收益差",
+       "root_cause": "该 group 路径级数深, Vt swap 只能补 ~30ps",
+       "resolution": "u_alu group 直接 resize, 不先试 Vt swap",
+       "tags": ["eco", "sta"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "ECO"}},
+    {"call": "api_decision_record", "args": {
+      "stage": "sta_eco", "action": "eco_priority",
+      "rationale": "violation 排序: 1) u_alu group (slack -0.210, 12 paths, resize, priority 5.04, 依 KB 经验跳过 Vt swap) 2) u_lsu group (slack -0.152, 3 paths, Vt swap, priority 0.46); conflict 标记: u_mem group hold slack 0.02ns < margin 0.05ns, 禁止 buffer 插入, 降级为 resize",
+      "params": {"ranked": [
+        {"group": "u_alu", "slack": -0.210, "paths": 12, "method": "resize", "priority": 5.04},
+        {"group": "u_lsu", "slack": -0.152, "paths": 3, "method": "vt_swap", "priority": 0.46}],
+        "conflicts": [{"group": "u_mem", "hold_slack": 0.02, "forbidden": "buffer_insert"}],
+        "margin": 0.05}}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "output_contains", "step": 1, "text": "conflict"},
+    {"type": "output_contains", "step": 1, "text": "u_alu"},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["sta", "eco", "so-2", "golden"]
+}

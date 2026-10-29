@@ -1,0 +1,14 @@
+{
+  "agent": "irem",
+  "version": "1.2.0",
+  "ts": 1793232529.748,
+  "pass_rate": 1.0,
+  "cases": {
+    "emir-fix-01": {
+      "pass": true
+    },
+    "emir-hotspot-01": {
+      "pass": true
+    }
+  }
+}

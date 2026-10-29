@@ -1,0 +1,10 @@
+****************************************
+Report : design -drc
+Design : soc_top
+Version: T-2022.03
+****************************************
+DRC Summary (route):
+  Short violations      : 1
+  Spacing violations    : 2
+  Antenna violations    : 0
+  Total DRC violations  : 3

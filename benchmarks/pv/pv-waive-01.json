@@ -1,0 +1,36 @@
+{
+  "id": "pv-waive-01",
+  "agent": "pv",
+  "tool": "calibre",
+  "requires": ["calibre"],
+  "description": "SO-5: waiver 流程 — DRC 后先 decision_record (问责强制) 再 api_calibre_waive, 报告按 waived/unwaived 分类; requires=calibre 由 HACOO_CALIBRE_MOCK=1 或真实 binary 满足",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"},
+    "knowledge_seed": [
+      {"symptom": "DRC 违例中含 foundry 确认的伪违例",
+       "root_cause": "密度填充单元边界的规则误报",
+       "resolution": "waiver 必须先记录决策 (理由+依据) 再 waive; waiver 文件纳入版本管理",
+       "tags": ["pv", "waiver"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "waiver"}},
+    {"call": "api_run_drc", "args": {"runset": "drc.rules", "layout": "chip.gds",
+                                     "top": "chip", "work_dir": "bench_drc"}},
+    {"call": "api_decision_record", "args": {"stage": "pv_waiver", "action": "api_calibre_waive",
+                                             "rationale": "M1.S.2 为 foundry 确认的伪违例 (密度填充单元边界), waiver 依据见 tap-out 包 waiver 清单"}},
+    {"call": "api_calibre_waive", "args": {"rule": "M1.S.2", "bbox": "0,0,10,10",
+                                           "justification": "foundry 确认的伪违例",
+                                           "work_dir": "bench_drc"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"},
+    {"type": "output_contains", "step": 3, "text": "\"waived_count\": 5"},
+    {"type": "output_contains", "step": 3, "text": "\"unwaived_count\": 2"},
+    {"type": "metric_observed", "metric": "waived_count", "method": "api_calibre_waive"},
+    {"type": "metric_observed", "metric": "unwaived_count", "method": "api_calibre_waive"}
+  ],
+  "tags": ["pv", "waiver", "so-5", "golden"]
+}

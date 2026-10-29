@@ -22,8 +22,12 @@ log = logging.getLogger("hacoo.adapters")
 # tool_name -> "module:Class"  (内置)
 ADAPTERS: Dict[str, str] = {
     "mock_eda": "hacoo.adapters.mock_eda:MockEDAAdapter",  # 开发/测试用
-    "isf": "hacoo.adapters.isf:ISFAdapter",                # ISF 自动化平台 (mock 形态)
+    "isf": "hacoo.adapters.isf:ISFAdapter",                # ISF 自动化平台 (CLI 环境, mock 回退)
     # ---- 生产 EDA 工具 (T2: 命令语义封装在各 adapter 内) ----
+    "genus": "hacoo.adapters.synthesis:GenusAdapter",              # 综合 (Cadence)
+    "dc_shell": "hacoo.adapters.synthesis:DCAdapter",              # 综合 (Synopsys)
+    "tessent": "hacoo.adapters.dft:TessentAdapter",                # DFT (Siemens)
+    "dftmax": "hacoo.adapters.dft:DftMaxAdapter",                  # DFT (Synopsys, 经 dc_shell-t)
     "primetime": "hacoo.adapters.primetime:PrimeTimeAdapter",      # STA
     "icc2": "hacoo.adapters.icc2:ICC2Adapter",                     # APR (Synopsys)
     "innovus": "hacoo.adapters.innovus:InnovusAdapter",            # APR (Cadence)

@@ -1,0 +1,25 @@
+{
+  "id": "flow-isf-orchestration-01",
+  "agent": "flow",
+  "tool": "mock_eda",
+  "description": "flow 编排: 查询 DB 版本管理经验并记录 flow 提交决策",
+  "setup": {
+    "knowledge_seed": [
+      {"symptom": "fw start 提交后立刻失败",
+       "root_cause": "data_version 与 block 的 DB 不匹配",
+       "resolution": "提交前用 api_isf_flows 核对 data_version/design_version",
+       "tags": ["isf", "flow"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "data_version"}},
+    {"call": "api_decision_record", "args": {"stage": "flow_submit", "action": "version_check",
+                                             "rationale": "提交前核对数据版本"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["flow", "isf", "golden"]
+}

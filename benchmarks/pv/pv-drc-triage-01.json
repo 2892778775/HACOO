@@ -1,0 +1,25 @@
+{
+  "id": "pv-drc-triage-01",
+  "agent": "pv",
+  "tool": "mock_eda",
+  "description": "DRC 违例分诊: 查询知识库区分真实违例与 deck 设置问题并记录决策",
+  "setup": {
+    "knowledge_seed": [
+      {"symptom": "Calibre DRC 报出大量同规则违例",
+       "root_cause": "rule deck 版本与设计节点不匹配",
+       "resolution": "先核对 deck 版本再按规则聚类分派真实违例",
+       "tags": ["drc", "calibre"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "Calibre"}},
+    {"call": "api_decision_record", "args": {"stage": "pv_triage", "action": "classify_violations",
+                                             "rationale": "区分真实违例与 deck/设置问题"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["pv", "drc", "golden"]
+}

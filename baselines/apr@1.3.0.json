@@ -1,0 +1,26 @@
+{
+  "agent": "apr",
+  "version": "1.3.0",
+  "ts": 1793232679.192,
+  "pass_rate": 1.0,
+  "cases": {
+    "apr-fp-exploration-01": {
+      "pass": true
+    },
+    "apr-metrics-01": {
+      "pass": null
+    },
+    "apr-route-drc-loop-01": {
+      "pass": true
+    },
+    "apr-substage-icc2-01": {
+      "pass": true
+    },
+    "apr-substage-innovus-01": {
+      "pass": true
+    },
+    "eco-scope-01": {
+      "pass": true
+    }
+  }
+}

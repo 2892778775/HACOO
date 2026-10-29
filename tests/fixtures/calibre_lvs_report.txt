@@ -1,0 +1,17 @@
+// Calibre v2023.2  nmLVS
+
+                    LVS REPORT
+
+  REPORT FILE NAME:         chip.lvs.report
+  LAYOUT NAME:              chip.gds
+  SOURCE NAME:              chip.sp
+
+  OVERALL COMPARISON RESULTS:       #     INCORRECT     #
+
+  o Initial Correspondence Points: 1245
+
+     Shorted Nets    : 2
+     Open Nets       : 1
+     Incorrect Nets  : 3
+     Incorrect Ports: 0
+     Incorrect Devices: 4

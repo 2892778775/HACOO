@@ -158,15 +158,19 @@ class HacooClient:
 
     def knowledge_add(self, agent: str, symptom: str, resolution: str,
                       root_cause: str = "", tags: Optional[List[str]] = None,
-                      run_id: Optional[str] = None) -> Dict[str, Any]:
+                      run_id: Optional[str] = None,
+                      profile: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
         return self.call("api_knowledge_add", arguments={
             "agent": agent, "symptom": symptom, "resolution": resolution,
-            "root_cause": root_cause, "tags": tags or [], "run_id": run_id})["data"]
+            "root_cause": root_cause, "tags": tags or [], "run_id": run_id,
+            "profile": profile})["data"]
 
     def knowledge_query(self, agent: str, keyword: str = "",
-                        tags: Optional[List[str]] = None, limit: int = 10) -> List[Dict[str, Any]]:
+                        tags: Optional[List[str]] = None, limit: int = 10,
+                        profile: Optional[Dict[str, str]] = None) -> List[Dict[str, Any]]:
         return self.call("api_knowledge_query", arguments={
-            "agent": agent, "keyword": keyword, "tags": tags or [], "limit": limit})["data"]
+            "agent": agent, "keyword": keyword, "tags": tags or [],
+            "limit": limit, "profile": profile})["data"]
 
     def decision_record(self, agent: str, stage: str, action: str, rationale: str,
                         run_id: Optional[str] = None,
@@ -199,6 +203,77 @@ class HacooClient:
 
     def list_flow_templates(self) -> List[Dict[str, Any]]:
         return self.call("api_list_flow_templates")["data"]
+
+    def runs_list(self, limit: int = 100,
+                  status: Optional[str] = None) -> List[Dict[str, Any]]:
+        """列出 flow run 摘要 (最新在前, 可按 status 过滤)。"""
+        return self.call("api_runs_list", arguments={
+            "limit": limit, "status": status})["data"]
+
+    # ------------------------------------------------------------ 成长闭环 (人类反馈 + 主动发现)
+    # 这些方法同样是人类面向的: 不受 Agent 启停/白名单限制。
+
+    def feedback(self, agent: str, content: str, decision_id: Optional[str] = None,
+                 feedback_type: str = "correction", tags: Optional[List[str]] = None,
+                 run_id: Optional[str] = None) -> Dict[str, Any]:
+        """提交人类反馈 (纠正/确认/备注); correction 落入知识库且 weight=5。"""
+        return self.call("api_feedback_submit", arguments={
+            "agent": agent, "content": content, "decision_id": decision_id,
+            "feedback_type": feedback_type, "tags": tags or [], "run_id": run_id})["data"]
+
+    def review_queue(self, agent: Optional[str] = None, limit: int = 50) -> Dict[str, Any]:
+        """待复核队列: pending 决策 + unreviewed 的 agent 知识条目。"""
+        return self.call("api_review_queue", arguments={
+            "agent": agent, "limit": limit})["data"]
+
+    def knowledge_review(self, entry_id: str, action: str, note: str = "") -> Dict[str, Any]:
+        """复核知识条目: action = approve|reject (reject 后 weight=0 不再被推举)。"""
+        return self.call("api_knowledge_review", arguments={
+            "entry_id": entry_id, "action": action, "note": note})["data"]
+
+    def insights_scan(self, agent: Optional[str] = None,
+                      window_days: int = 7) -> Dict[str, Any]:
+        """运行规则检测器并落盘新 insight (按签名去重); 缺省扫描全部启用 Agent。"""
+        return self.call("api_insights_scan", arguments={
+            "agent": agent, "window_days": window_days})["data"]
+
+    def insights_list(self, agent: Optional[str] = None, kind: Optional[str] = None,
+                      status: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+        return self.call("api_insights_list", arguments={
+            "agent": agent, "kind": kind, "status": status, "limit": limit})["data"]
+
+    def insight_review(self, insight_id: str, action: str, note: str = "",
+                       auto_kb: bool = True, create_upgrade: bool = False) -> Dict[str, Any]:
+        """复核 insight: confirm (auto_kb 时自动生成知识条目;
+        create_upgrade 时联动生成升级提案) | dismiss。"""
+        return self.call("api_insight_review", arguments={
+            "insight_id": insight_id, "action": action, "note": note,
+            "auto_kb": auto_kb, "create_upgrade": create_upgrade})["data"]
+
+    # ------------------------------------------------------------ 升级提案管理 (SPEC-evolution Part A)
+
+    def upgrade_propose(self, title: str, kind: str, target: str, motivation: str,
+                        acceptance: str = "", proposed_change: str = "",
+                        source: str = "human",
+                        source_ref: Optional[str] = None) -> Dict[str, Any]:
+        """创建升级提案 (status=proposed); 空 acceptance 的提案不允许被 accept。"""
+        return self.call("api_upgrade_propose", arguments={
+            "title": title, "kind": kind, "target": target, "motivation": motivation,
+            "acceptance": acceptance, "proposed_change": proposed_change,
+            "source": source, "source_ref": source_ref})["data"]
+
+    def upgrade_list(self, status: Optional[str] = None, target: Optional[str] = None,
+                     limit: int = 100) -> List[Dict[str, Any]]:
+        """查询升级提案 (按 ts 倒序)。"""
+        return self.call("api_upgrade_list", arguments={
+            "status": status, "target": target, "limit": limit})["data"]
+
+    def upgrade_update(self, proposal_id: str, to_status: str, note: str = "",
+                       version_after: Optional[str] = None) -> Dict[str, Any]:
+        """升级提案状态流转 (含合法性与 acceptance 强制检查)。"""
+        return self.call("api_upgrade_update", arguments={
+            "proposal_id": proposal_id, "to_status": to_status,
+            "note": note, "version_after": version_after})["data"]
 
     def session(self, tool: str) -> "InstanceSession":
         return InstanceSession(self, tool)

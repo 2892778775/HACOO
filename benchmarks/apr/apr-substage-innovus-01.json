@@ -1,0 +1,36 @@
+{
+  "id": "apr-substage-innovus-01",
+  "agent": "apr",
+  "tool": "innovus",
+  "description": "BE-1: Innovus 六个 APR 子阶段方法依次调用 (mock 模式), 断言生成 Innovus 系命令语义",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"}
+  },
+  "script": [
+    {"call": "api_load_design", "args": {"netlist": "chip.v", "top": "chip",
+                                         "lef": ["tech.lef", "cells.lef"],
+                                         "libs": ["tt.lib"]}},
+    {"call": "api_fp_create", "args": {"utilization": 0.7, "aspect_ratio": 1.0,
+                                       "core_margin": 2.0}},
+    {"call": "api_fp_place_macros"},
+    {"call": "api_place_opt"},
+    {"call": "api_cts_build", "args": {"target_skew_ps": 50}},
+    {"call": "api_cts_report"},
+    {"call": "api_route_opt"},
+    {"call": "api_decision_record", "args": {"stage": "apr_substage", "action": "substage_flow",
+                                             "rationale": "BE-1 子阶段方法验收 (Innovus)"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "output_contains", "step": 1, "text": "floorPlan -r"},
+    {"type": "output_contains", "step": 2, "text": "planDesign"},
+    {"type": "output_contains", "step": 3, "text": "place_opt_design"},
+    {"type": "output_contains", "step": 4, "text": "ccopt_design -cts"},
+    {"type": "output_contains", "step": 5, "text": "report_ccopt_clock_trees"},
+    {"type": "output_contains", "step": 5, "text": "skew"},
+    {"type": "output_contains", "step": 6, "text": "routeDesign"},
+    {"type": "output_contains", "step": 6, "text": "optDesign -postRoute"},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["apr", "substage", "be-1", "golden"]
+}

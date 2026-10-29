@@ -1,0 +1,6 @@
+// Calibre v2023.2  nmDRC results (ASCII)
+DESIGN: chip
+RULECHECK M1.S.2 ----------------------------------------------------------------- TOTAL Result Count = 5 (5)
+RULECHECK VIA1.R.1 --------------------------------------------------------------- TOTAL Result Count = 2 (2)
+RULECHECK M2.W.1 ----------------------------------------------------------------- TOTAL Result Count = 12 (12)
+--- TOTAL Original Layer Errors = 19

@@ -1,0 +1,18 @@
+{
+  "id": "fanout-01",
+  "agent": "flow",
+  "tool": "mock_eda",
+  "description": "X-3: timing_fanout 模板 2 路并行试跑, compare 产出 winner 且 trace 可问责",
+  "tags": ["flow", "fanout", "platform"],
+  "script": [
+    {"call": "api_flow_start",
+     "args": {"template": "timing_fanout",
+              "params": {"design_path": "chip.v", "top": "chip"}}}
+  ],
+  "assertions": [
+    {"type": "call_ok"},
+    {"type": "output_contains", "text": "compare_result"},
+    {"type": "output_contains", "text": "\"winner\""},
+    {"type": "output_contains", "text": "\"status\": \"success\""}
+  ]
+}

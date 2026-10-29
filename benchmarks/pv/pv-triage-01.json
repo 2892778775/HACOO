@@ -1,0 +1,43 @@
+{
+  "id": "pv-triage-01",
+  "agent": "pv",
+  "tool": "calibre",
+  "requires": ["calibre"],
+  "description": "SO-6: pv-debug-triage skill 核心 — DRC 违例按 rule 聚类 -> KB 判定 -> 分派表 (真实版图问题 -> apr / deck 精度问题 -> flow), 每条分派入问责日志",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"},
+    "knowledge_seed": [
+      {"symptom": "M1.S.2 spacing 违例集中在布线密集区",
+       "root_cause": "真实版图问题: 局部布线间距不足",
+       "resolution": "分派 apr: widen/局部重布",
+       "tags": ["pv", "triage"]},
+      {"symptom": "VIA1.R.1 违例量级在精度边缘且全芯片均匀散布",
+       "root_cause": "rule deck 精度/单位设置问题",
+       "resolution": "分派 flow: 查 deck 版本与单位设置",
+       "tags": ["pv", "triage"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "triage"}},
+    {"call": "api_run_drc", "args": {"runset": "drc.rules", "layout": "chip.gds",
+                                     "top": "chip", "work_dir": "bench_triage"}},
+    {"call": "api_decision_record", "args": {"stage": "pv_triage", "action": "dispatch",
+                                             "rationale": "M1.S.2 (5 条) 布线间距违例, KB 判定真实版图问题 -> apr widen/重布",
+                                             "params": {"rule": "M1.S.2", "count": 5, "dispatch": "apr"}}},
+    {"call": "api_decision_record", "args": {"stage": "pv_triage", "action": "dispatch",
+                                             "rationale": "VIA1.R.1 (2 条) 精度边缘均匀散布, KB 判定 deck 设置问题 -> flow 查 deck",
+                                             "params": {"rule": "VIA1.R.1", "count": 2, "dispatch": "flow"}}},
+    {"call": "api_decision_record", "args": {"stage": "pv_triage", "action": "triage_done",
+                                             "rationale": "分派表完成: apr=1 类(5 条), flow=1 类(2 条), human=0",
+                                             "params": {"apr": 1, "flow": 1, "human": 0}}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 2},
+    {"type": "decision_recorded"},
+    {"type": "output_contains", "step": 2, "text": "\"dispatch\": \"apr\""},
+    {"type": "output_contains", "step": 3, "text": "\"dispatch\": \"flow\""},
+    {"type": "metric_observed", "metric": "total_errors", "method": "api_run_drc"}
+  ],
+  "tags": ["pv", "triage", "so-6", "golden"]
+}

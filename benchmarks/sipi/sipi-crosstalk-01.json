@@ -1,0 +1,25 @@
+{
+  "id": "sipi-crosstalk-01",
+  "agent": "sipi",
+  "tool": "mock_eda",
+  "description": "串扰分析: 查询 PDN/串扰经验并记录 victim 处理决策",
+  "setup": {
+    "knowledge_seed": [
+      {"symptom": "crosstalk delta delay 导致 hold 违例",
+       "root_cause": "aggressor 与 victim 长距离平行走线",
+       "resolution": "victim 加 shielding 或 aggressor 降驱动",
+       "tags": ["crosstalk", "si"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "crosstalk"}},
+    {"call": "api_decision_record", "args": {"stage": "sipi_analysis", "action": "victim_fix",
+                                             "rationale": "按 victim/aggressor 关系选择修复"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["sipi", "crosstalk", "golden"]
+}

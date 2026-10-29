@@ -1,0 +1,35 @@
+{
+  "id": "apr-substage-icc2-01",
+  "agent": "apr",
+  "tool": "icc2",
+  "description": "BE-1: ICC2 六个 APR 子阶段方法依次调用 (mock 模式), 断言生成 ICC2 系命令语义",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"}
+  },
+  "script": [
+    {"call": "api_load_design", "args": {"netlist": "chip.v", "top": "chip",
+                                         "lib_name": "ndm_lib", "tech_tf": "tech.tf",
+                                         "ndm_libs": ["ref.ndm"]}},
+    {"call": "api_fp_create", "args": {"utilization": 0.7, "aspect_ratio": 1.0,
+                                       "core_margin": 2.0}},
+    {"call": "api_fp_place_macros"},
+    {"call": "api_place_opt"},
+    {"call": "api_cts_build", "args": {"target_skew_ps": 50}},
+    {"call": "api_cts_report"},
+    {"call": "api_route_opt"},
+    {"call": "api_decision_record", "args": {"stage": "apr_substage", "action": "substage_flow",
+                                             "rationale": "BE-1 子阶段方法验收 (ICC2)"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "output_contains", "step": 1, "text": "initialize_floorplan"},
+    {"type": "output_contains", "step": 2, "text": "create_placement -floorplan"},
+    {"type": "output_contains", "step": 3, "text": "place_opt"},
+    {"type": "output_contains", "step": 4, "text": "clock_opt"},
+    {"type": "output_contains", "step": 5, "text": "report_clock_qor"},
+    {"type": "output_contains", "step": 5, "text": "skew"},
+    {"type": "output_contains", "step": 6, "text": "route_opt"},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["apr", "substage", "be-1", "golden"]
+}

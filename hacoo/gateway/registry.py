@@ -61,18 +61,104 @@ GENERIC_METHODS: List[MethodSpec] = [
                        "resolution": {"type": "str", "required": True, "default": None},
                        "root_cause": {"type": "str", "required": False, "default": ""},
                        "tags": {"type": "list", "required": False, "default": None},
-                       "run_id": {"type": "str", "required": False, "default": None}}),
+                       "run_id": {"type": "str", "required": False, "default": None},
+                       "profile": {"type": "dict", "required": False,
+                                   "default": None}}),  # X-2: design 画像
     MethodSpec(name="api_knowledge_query", description="Query an agent's knowledge base "
-               "by keyword and/or tags (decision support).",
+               "by keyword and/or tags (decision support); optional design profile boosts same-profile lessons.",
                capability="read", kind="generic",
                params={"agent": {"type": "str", "required": True, "default": None},
                        "keyword": {"type": "str", "required": False, "default": ""},
                        "tags": {"type": "list", "required": False, "default": None},
-                       "limit": {"type": "int", "required": False, "default": 10}}),
+                       "limit": {"type": "int", "required": False, "default": 10},
+                       "profile": {"type": "dict", "required": False,
+                                   "default": None}}),  # X-2: design 画像
     MethodSpec(name="api_knowledge_list", description="List recent knowledge entries of an agent.",
                capability="read", kind="generic",
                params={"agent": {"type": "str", "required": True, "default": None},
                        "limit": {"type": "int", "required": False, "default": 50}}),
+    # ---- 人类反馈与复核 (成长闭环 §2, 人类面向: 不受 Agent 启停限制) ----
+    MethodSpec(name="api_feedback_submit", description="Submit human feedback about an agent's "
+               "decision/behavior: correction|confirmation|note. Corrections land in the "
+               "knowledge base (source=human_correction, weight=5). Human-facing: not subject "
+               "to agent enable/disable policy.",
+               capability="write", kind="generic",
+               params={"agent": {"type": "str", "required": True, "default": None},
+                       "content": {"type": "str", "required": True, "default": None},
+                       "decision_id": {"type": "str", "required": False, "default": None},
+                       "feedback_type": {"type": "str", "required": False, "default": "correction"},
+                       "tags": {"type": "list", "required": False, "default": None},
+                       "run_id": {"type": "str", "required": False, "default": None}}),
+    MethodSpec(name="api_review_queue", description="List items pending human review: "
+               "pending decisions + unreviewed knowledge entries (agent lessons and "
+               "human corrections awaiting a second pair of eyes).",
+               capability="read", kind="generic",
+               params={"agent": {"type": "str", "required": False, "default": None},
+                       "limit": {"type": "int", "required": False, "default": 50}}),
+    MethodSpec(name="api_knowledge_review", description="Approve or reject a knowledge entry "
+               "(reject sets weight=0 so it is no longer promoted).",
+               capability="write", kind="generic",
+               params={"entry_id": {"type": "str", "required": True, "default": None},
+                       "action": {"type": "str", "required": True, "default": None},
+                       "note": {"type": "str", "required": False, "default": ""}}),
+    # ---- 主动发现 (成长闭环 §3) ----
+    MethodSpec(name="api_insights_scan", description="Run rule-based detectors over an agent's "
+               "observations/decisions/kb-misses and persist new insights (deduplicated by "
+               "signature). Defaults to all enabled agents. Human-facing.",
+               capability="write", kind="generic",
+               params={"agent": {"type": "str", "required": False, "default": None},
+                       "window_days": {"type": "int", "required": False, "default": 7}}),
+    MethodSpec(name="api_insights_list", description="Query insights by agent/kind/status.",
+               capability="read", kind="generic",
+               params={"agent": {"type": "str", "required": False, "default": None},
+                       "kind": {"type": "str", "required": False, "default": None},
+                       "status": {"type": "str", "required": False, "default": None},
+                       "limit": {"type": "int", "required": False, "default": 100}}),
+    MethodSpec(name="api_insight_review", description="Confirm or dismiss an insight. "
+               "confirm with auto_kb=true persists a knowledge entry (source=insight); "
+               "create_upgrade=true additionally opens an upgrade proposal (source=insight).",
+               capability="write", kind="generic",
+               params={"insight_id": {"type": "str", "required": True, "default": None},
+                       "action": {"type": "str", "required": True, "default": None},
+                       "note": {"type": "str", "required": False, "default": ""},
+                       "auto_kb": {"type": "bool", "required": False, "default": True},
+                       "create_upgrade": {"type": "bool", "required": False, "default": False}}),
+    # ---- 升级提案管理 (SPEC-evolution Part A, 人类面向: 不受 Agent 启停限制) ----
+    MethodSpec(name="api_upgrade_propose", description="Create an upgrade proposal "
+               "(agent_capability|skill_new|skill_update|knowledge_bulk|adapter_method|"
+               "platform_feature). Acceptance criteria is mandatory before a proposal "
+               "can be accepted.",
+               capability="write", kind="generic",
+               params={"title": {"type": "str", "required": True, "default": None},
+                       "kind": {"type": "str", "required": True, "default": None},
+                       "target": {"type": "str", "required": True, "default": None},
+                       "motivation": {"type": "str", "required": True, "default": None},
+                       "acceptance": {"type": "str", "required": False, "default": ""},
+                       "proposed_change": {"type": "str", "required": False, "default": ""},
+                       "source": {"type": "str", "required": False, "default": "human"},
+                       "source_ref": {"type": "str", "required": False, "default": None}}),
+    MethodSpec(name="api_upgrade_list", description="Query upgrade proposals "
+               "(latest first), optionally filtered by status/target.",
+               capability="read", kind="generic",
+               params={"status": {"type": "str", "required": False, "default": None},
+                       "target": {"type": "str", "required": False, "default": None},
+                       "limit": {"type": "int", "required": False, "default": 100}}),
+    MethodSpec(name="api_upgrade_update", description="Transition an upgrade proposal "
+               "(proposed->accepted|rejected; accepted->in_progress|rejected; "
+               "in_progress->done|accepted). Accept requires non-empty acceptance; "
+               "done should record version_after.",
+               capability="write", kind="generic",
+               params={"proposal_id": {"type": "str", "required": True, "default": None},
+                       "to_status": {"type": "str", "required": True, "default": None},
+                       "note": {"type": "str", "required": False, "default": ""},
+                       "version_after": {"type": "str", "required": False, "default": None}}),
+    MethodSpec(name="api_observations_query", description="Query raw tool-call observations "
+               "(troubleshooting / evidence for insights).",
+               capability="read", kind="generic",
+               params={"agent": {"type": "str", "required": False, "default": None},
+                       "run_id": {"type": "str", "required": False, "default": None},
+                       "tool": {"type": "str", "required": False, "default": None},
+                       "limit": {"type": "int", "required": False, "default": 500}}),
     # ---- 决策日志 (问责/问题定位) ----
     MethodSpec(name="api_decision_record", description="Record an agent decision BEFORE acting; "
                "returns decision_id for outcome tracking.",
@@ -110,6 +196,12 @@ GENERIC_METHODS: List[MethodSpec] = [
                params={"run_id": {"type": "str", "required": True, "default": None}}),
     MethodSpec(name="api_list_flow_templates", description="List available flow templates.",
                capability="read", kind="generic"),
+    MethodSpec(name="api_runs_list", description="List flow run manifest summaries "
+               "(latest first), optionally filtered by status "
+               "(running|success|failed). Dashboard/run-center use.",
+               capability="read", kind="generic",
+               params={"limit": {"type": "int", "required": False, "default": 100},
+                       "status": {"type": "str", "required": False, "default": None}}),
 ]
 
 

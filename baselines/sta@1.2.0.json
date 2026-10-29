@@ -1,0 +1,17 @@
+{
+  "agent": "sta",
+  "version": "1.2.0",
+  "ts": 1793192790.516,
+  "pass_rate": 1.0,
+  "cases": {
+    "sta-eco-priority-01": {
+      "pass": true
+    },
+    "sta-mcmm-01": {
+      "pass": true
+    },
+    "sta-wns-analysis-01": {
+      "pass": true
+    }
+  }
+}

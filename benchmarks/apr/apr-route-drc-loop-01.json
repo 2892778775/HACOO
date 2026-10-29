@@ -1,0 +1,48 @@
+{
+  "id": "apr-route-drc-loop-01",
+  "agent": "apr",
+  "tool": "icc2",
+  "description": "BE-4: route-drc-convergence skill 核心循环 — route -> DRC 报告按类型分类 (short/spacing/antenna) -> 针对性修复策略 (reroute/widen/via-pillar) -> 迭代至阈值。ICC2 mock 序列应答建模 DRC 逐轮下降: 5 -> 3 -> 1 -> 0",
+  "setup": {
+    "mock_tool_state": {"mode": "mock"},
+    "knowledge_seed": [
+      {"symptom": "route 后 DRC short/spacing 数量不收敛",
+       "root_cause": "congestion hotspot 区域局部绕线资源耗尽",
+       "resolution": "按 DRC 类型分类: short 走 reroute, spacing 走 widen, antenna 插 diode/via-pillar",
+       "tags": ["drc", "route"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "DRC"}},
+    {"call": "api_load_design", "args": {"netlist": "chip.v", "top": "chip",
+                                         "lib_name": "ndm_lib", "tech_tf": "tech.tf",
+                                         "ndm_libs": ["ref.ndm"]}},
+    {"call": "api_route_opt"},
+    {"call": "api_decision_record", "args": {"stage": "route", "action": "drc_fix_round1",
+                                             "rationale": "第1轮 DRC=5 (short=2 spacing=3 antenna=0), 主类型 short -> 策略 reroute",
+                                             "params": {"drc_total": 5, "dominant_type": "short", "strategy": "reroute"}}},
+    {"call": "api_route_opt", "args": {"extra_tcl": "route_eco -reroute modified_nets_only"}},
+    {"call": "api_decision_record", "args": {"stage": "route", "action": "drc_fix_round2",
+                                             "rationale": "第2轮 DRC=3 (short=0 spacing=2 antenna=1), 主类型 spacing -> 策略 widen",
+                                             "params": {"drc_total": 3, "dominant_type": "spacing", "strategy": "widen"}}},
+    {"call": "api_route_opt", "args": {"extra_tcl": "# widen: 加宽 spacing 违例网段\nroute_eco"}},
+    {"call": "api_decision_record", "args": {"stage": "route", "action": "drc_fix_round3",
+                                             "rationale": "第3轮 DRC=1 (short=0 spacing=0 antenna=1), 主类型 antenna -> 策略 via-pillar/diode",
+                                             "params": {"drc_total": 1, "dominant_type": "antenna", "strategy": "via-pillar"}}},
+    {"call": "api_route_opt", "args": {"extra_tcl": "insert_via_pillars; route_eco"}},
+    {"call": "api_decision_record", "args": {"stage": "route", "action": "drc_converged",
+                                             "rationale": "第4轮 DRC=0, 达到阈值 (<=0), 收敛退出",
+                                             "params": {"drc_total": 0, "rounds": 4}}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"},
+    {"type": "output_contains", "step": 2, "text": "\"drc_count\": 5"},
+    {"type": "output_contains", "step": 4, "text": "\"drc_count\": 3"},
+    {"type": "output_contains", "step": 6, "text": "\"drc_count\": 1"},
+    {"type": "output_contains", "step": 8, "text": "\"drc_count\": 0"},
+    {"type": "metric_observed", "metric": "drc_count", "method": "api_route_opt"}
+  ],
+  "tags": ["apr", "drc", "route", "convergence", "be-4", "golden"]
+}

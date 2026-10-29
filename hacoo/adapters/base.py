@@ -21,6 +21,9 @@ class MethodSpec:
     tool: Optional[str] = None
     params: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     # params: {"arg": {"type": "str", "required": True, "default": None}}
+    # SO-5: True 时网关强制 "先 decision_record 后调用" (问责敏感操作,
+    # 如 waiver); 无同 agent 的有效决策记录则拒绝 (DECISION_REQUIRED)。
+    requires_decision: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -30,15 +33,19 @@ class MethodSpec:
             "kind": self.kind,
             "tool": self.tool,
             "params": self.params,
+            "requires_decision": self.requires_decision,
         }
 
 
-def api_method(capability: str = "read", description: str = "") -> Callable:
-    """装饰器: 声明一个 api_* 方法的元数据 (能力级别 / 描述)。"""
+def api_method(capability: str = "read", description: str = "",
+               requires_decision: bool = False) -> Callable:
+    """装饰器: 声明一个 api_* 方法的元数据 (能力级别 / 描述 /
+    是否问责敏感需先记决策)。"""
 
     def wrap(fn: Callable) -> Callable:
         fn._hacoo_capability = capability
         fn._hacoo_description = description or (fn.__doc__ or "").strip().splitlines()[0] if (description or fn.__doc__) else ""
+        fn._hacoo_requires_decision = requires_decision
         return fn
 
     return wrap
@@ -83,6 +90,7 @@ class ToolAdapter:
                     kind="tool",
                     tool=cls.tool_name,
                     params=params,
+                    requires_decision=getattr(member, "_hacoo_requires_decision", False),
                 )
             )
         return sorted(specs, key=lambda s: s.name)

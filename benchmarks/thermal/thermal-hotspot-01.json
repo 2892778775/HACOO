@@ -1,0 +1,25 @@
+{
+  "id": "thermal-hotspot-01",
+  "agent": "thermal",
+  "tool": "mock_eda",
+  "description": "热热点定位: 查询 3D 层间热耦合经验并记录 TTV 规划决策",
+  "setup": {
+    "knowledge_seed": [
+      {"symptom": "3D 堆叠上层 die 温度超阈值",
+       "root_cause": "层间热耦合叠加局部功耗密度过高",
+       "resolution": "规划 thermal TSV 并回灌 power map 给上游",
+       "tags": ["thermal", "3d"]}
+    ]
+  },
+  "script": [
+    {"call": "api_knowledge_query", "args": {"keyword": "热耦合"}},
+    {"call": "api_decision_record", "args": {"stage": "thermal_signoff", "action": "ttv_planning",
+                                             "rationale": "热点超阈值, 规划 thermal TSV"}}
+  ],
+  "assertions": [
+    {"type": "call_ok", "all": true},
+    {"type": "knowledge_hit", "min": 1},
+    {"type": "decision_recorded"}
+  ],
+  "tags": ["thermal", "3d", "golden"]
+}
